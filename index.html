@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IDC Amicus Committee</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="IDC Amicus">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#1f2f4a">
+<link rel="apple-touch-icon" sizes="180x180" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAALQAAAC0CAIAAACyr5FlAAAQAElEQVR4nOydB1QU1/7H73Z6FxELqCgaLNgBNdiwROxiPxrTnslJT15iXuIz5Z+8mPLPS8zLOymaGGPsBUsSJSaiqGBDRQ0IIoIUkepStu/7LbPOzpa7guzMOrv3czicu3fuzOz+5ju/e+/v3rkjjhj4CCIQbCFGBAIGIg4CFiIOAhYiDgIWIg4CFiIOAhYiDgIWIg4CFiIOAhYiDgIWIg4CFiIOAhYiDgIWIg4CFiIOAhYiDgIWIg4CFiIOAhYiDscgFqIQf0GIr6hRqSut1qk0yAXgjThGPSSZGSe1U2B9muJKiZb+2DFA+PfZnnbK6/SovlFf16gvr9ZeKdVevamFnLbSu7No8hBp387irh2EAoGAzq9t1FXW6a6Wai9e12Tlq7VaxEd4I45gX0HfrhI7Bfy8VAiZLoKnFNkvb0GTUn8yV7XrhLKoUtea8kG+gmeneo6INum1ok5745a2vEYX5CuMCBVGdxbD37Thslq5btcJxa5MFeIbAt7NPv/kMW/mVf/jovLT3c12yj86wSNlpAf9ES7h45/LIREeJOwRJoruIpo+XCYWGW96jVb/w2HF7pNKZJdBPUV/n+Xt7y2kPjar9B9sbTxXaFaXJMVKnpjo6eNpKCNv1i/4qB7xDSFyV8pqdBlX1OsOKV77vgFubioTVAJXdMlYDzs79u0iWjXPTBmrfmqwUAaQdl69dn8z4jPuKw6avFLtmp2NzJyFD3vE97Fd4cok6M0F3jKpyW5HL6n+KrHdpgDxZebyrzahIeIwkHNDW1JldoGfnOglFNgoCXVQoLeZ0faftnf5wX8g3kLEYWT/KbN2RsdA4egYG+3ZyUPNekzXyrWFFfa6IqcL1BeL1HmlvOzakjiHkQtFltdvSJQ4/ZLZfQ/91bAAETMnv+weVx06sW9saET8hIjDiLzJMsoRGWppnKgwyxzoACPXhYjDSL2VOIL8LBsdQb6We7m2OEibw4hej1Rqsytt0fAEAqxymnncF7k3xHMYEYmQVGLmKhoVll5BrbHM8bYXEOE9RBxGOgVYegW5wjKObl31+Hu7susl4jACYzcWOcWVln3UoluWOYHetoIhrgJpcxiJibCMapwrsOymXirRQrCcmeNPxOEOjO1vJg7ohvyRYxnchKBFxmWzzKgwkczu0O/iMbIDqwPgb3hv/jlpIg4DUeHC8GCz6NaO4wrrBinw05/Naq0pHwZZkofZm2WSFCtDLUPBp67yL45OxAE9DsFTk8ymBZ26qtp6TGGzcJVc/91Bs7HW5OGyAC/blcvckbIO/gYLHzwDXV7+VUBuLQ5vGYLR16+e9o3pZqobQBkf7miycy1hpA38h15v9B+h/qKPlnuHmEfMBAI0eYh02ThDT/fCdc3uTAXiIbyZ7ENPE4wIFXvJzCbkVdQYOhG4aYIhfiLq9qVQafTXyg0tzQ7+ohA/s3ujvEa3J1Nhf5SVZmiU+IUZnkE+IvprnL+muVGpLavRQtt2RLSYGoXJvqZ+d0sjT6eU8n6aIMQxqVBmK6cJSsXG4+h0+rpGXT1oq1aXV6qFgbfckjZM9TxToHn8c/nUYTLwEF2CRfAdxg4wa3xcLdVsSlecyefxVGP+TRN8APH1FPTpLArxFwb6COVNuuLb2uIqXW0D74ddSBDMAcib9acLXOJhBHOIOAhYiDgIWIg4CFiIOAhYiDgIWIg4CFiIOAhYiDgMwKjszBEeMREipEeXijWpWcqCslY9Tu3auHuEVChAsxNkS8Z6SESm8RoYlN9geJxawcehVAfi7kP2MJ63fIInUxmApOVx6vg+bVjBwSVxa3FIxejpR7ALvDwz1VPq3rWuW4ujR0eRnxfWAjAcDwWQG+PW4ugeJmxnAdfGrf3m9QpdOwu4Nm59Z1yv1Orwq8QpVbrCW/xc6c1BuLU4lGq0+Sh2+S/Y5BorRt43ooCwXsiNybmh6eAv6NnJsnpNzVRs/FOJ3BsyTdAAREg/fcxHLBJAHaPVoVfWyUmEFJEgGAVIQW2oQQQCJFCpEVEGBRlbIWAh4iBgIeIgYHG+OGQStHqBl7eH4GyBRqNz2igovcK1RIQWJTptwR6RSD80SnKnSffRzia5s9c/dn5vZdvrft4eLe1ivR4J3HqIvAU9NU+gUaGft8bJy6U7ubcSFij0kt39DqAMV16brxXAz9cbbw9vD9Q12MlXx8mnn50gEwgYinBvx6EHU5isIZgeJ0NOxZltDn8vNDFW2uJHjb4URjp2n1AqnBG0njdKJhEbvoNao9+W4YTYqIcYzTLcKiZrjB8g2XxUUSN3mjt1pjjmjvSgrgeNUCgAX/ZzuhNWs5gdLzWKQ+ucL/B4kofQfC1+mVQ4N0H2zUGnre3htGrFxwNNHWpjwaTkoVIfl17c0yZm1mB4ismDnWkNp4lj+ggP+q0l2dfU5wuNS2ZB5rThTq5rucfMGoWGFy1QaciETchJOEccUjGawXib3/YMxbYMk/OcGS9zq8mb1tZg1muwyVnWcI44WuoO46nzy7QXirQXrmshQeXApqnD3Mh5WFsjp0ibe9PYLIdNU4ZIkTNwgjjEQjRnlMlVbk43BgK3HDXdLrPipGL3GDDGWWPHcZM15iQ4x5U64QokDZLSrx8oqtRm3V2gMzNPVVplvF2C/UQTBjnnduEYnDVO5qqZ1hg/0AkP0XAtDujHM1/kuf1YMyPyJfiZMWlv3kgPlw+m27fGtgzTuoaz4mQiIdcBD67FkdhP0jHQeNJbtbr0y2YBr/RLasik0lAsMcbF26X2rfFnjpJ2Hp1DxCP7cu1KORaHftHDppbmtuMKvfnNAB+3M+ralNGeyJWHW+5hDa1OsDvT5EpnJ3hwbA1OxREXLYU7gEpX39H+nm1jOdi0bFVdo9F5RIaKRvR22QdWW2ONwxfUsIlK9woXcfz4LqfiWPCwqX7dnanS2JqpCZk7GTGPhYnYZ1n5TmusodKgnSdMzmPuSE4DYtyJY2CkCLRPpRsUugOnsYNb+8+oGu6+JQl2GRDpgi2P1lvj17Mma/TpIu4fyd3ju9yJY95ok+r3nLT3vBBsSs00+VgYL0Uux31bg8tZahyJI6qTKLaHsb5UqnT7Tt1jTHxvlgKKUelBPSWwO3Ih2mONAZGSPp05sgZH4mDWry21xj3KQ4EDZ0y3y/zRLuU87sMav50zWWPuKI6cBxfiCA8SxkUb2w1qjX7n8VZNUID4Mf2qTmilw0GQS3Cf1jihpJ0H7M6NNbg4B1STgrvBzkPnVfVNrdoLiqWdN94usPvCRBdxHvdnjRq5/vBFY2QddufGlbIujlB/IcQBqbROp9/Rlhl42zOU9BIJY/pJQ/157zzaY43dJ5Wau6+XG9NfyoHzYP0EKaNk9Oy3I5dUlfVteAwVCkNAnUrDQebyv9vSHmuU1eiO5BhdqVgkmBXPujXYFYe/F0qKNY4I6PX6zeltnrj7c7qCfpvaxFgpHJC/tN8aW48paWuMHyAJ8mV3ZJJdcTCnEMMYNGgftRHYJTPPGASAQ83hNkToWBxrDWr6MWITFsVhMYUYVI/uC+YkIP5OP3aUNXYwxhbYnn7MojgsphAXlN/n+lqwowtMP3aUNXJLtZxNP2ZLHNaTZlE74Pv0Y8dag7Ppx2yJw3rSLGoHfJ9+7FhrcDb9mBVx4CbNtgf+Tj9mwxrcTD9mxca4SbPtgb/Tj9mwBjfTj1kRx/iBpiu37ZijXkwhYNa14wfwRhwsWYOD6ceOXLwl2Ffw3hKfiFDuhteLb2vf2thQ7Yjn0Hes9PNsWSmkSalP+dABq6bw2hoUjvQc8LVeXS8/k+8At9kazhaoX1knr5Y/oDOQXcAaDq5WmpTonc2Nh7JZX9/i8AXV2z83Nj3Yawzz3RqOb+bCMOrne5ur7ugWsTY3eEu6YuMRp61a0SZ4bQ22AiibjiivFGufn+YVGuBI51RZp/tiX1N2Ic8WrOepNVhcGL+iVvfbOSV0waM7iwTtfrJRp9PvzVK+v63xZjUra0+bln3SGuaRIEfDL2tQsBuIVqrRd4cUR3LUL83wimzHK7GKbmk/S2267/GIBwTeWYOLUQr4Gc99LR8RLU4eJqNnXbeSC9fV+04ps/I0Old5LJJH1uBoCAt+zMlcDfx1CTYMq44bKPWS2XOtDQpdWrbqt7MqVt2ms+CLNZyzgrGnFMV0Ewf7CYJ9RUE+gmA/QzOt+o6upkFfLddW39FfLNJw/JYkhwfBWs8DaA0K5wx+N6vQmQLq53IUI3qQeWCtQd6aQMBCxEHAQsRBwELEQcBCxEHAQsRBwELEQcBCxEHAQsRBwELEQcBCxEHAQsRBwELEQcBCxEHAQsRBwELEQcDi/HfZc8OUIZJnk72RI/hyf+OvZ91ijpJbvEjtoa6iFVMcttQcHAoOiNwA1xeHn5fgrfneYpHDFt6DQ8EB4bDI1XFxcYiECC6kv7eDfyYcEA4rcvU7y8V/34opnjHdWGl0w2Hh4MilcWVxQCP0kaEsrh4GB4dTINfFZcXh2EYoDtdunLpsnCMiVHjfC8G29URXSvj9EC8OlxVHSyiCPDHVLkiElICFiIOAhYiDgIWIg4CFiIOAhYiDgIWIg4CFiIOAhYiDgIWIg4CFO3EEBfoNjX0IElfyCm+WVdop6ePtmTB8oEVmdk7e7apa68KeHrLR8YMsMs9fulp5u4b+KBAIksaMsN63WaE8djIb2f0m0b0iI7uG94jsolZrqqprSytun8g6r1TZCMx3DA0eGGNjxd+yiqpLfxVQ6V49u3XvFt6aL9CnV2Rs/+iw0BCpVFxdU19RWV18sxxMp9Vyt6Agd+J4bPHMZ5+YD4l9B48+9/oaOyXDw0K/+WyVReZP23956/3/WBdenPLIW688YZH59Ksf/Pr7cfqjVCK2PiBQWl45cspyZIvQDkErX1g+Y8oYUcuUnjvyxluV1d26hMlk0sam5hOnLuzY+/vBP04ydxk+KGbtmtetD5X6y5EX/vExlU6ZPuGpZXPsfwG4i1a/tiJ54mg4NZzrRkl5p44hgQF+yPDue01eflHywhcQJ3A0wRju3cyDG+DegrRKrYmfuLS69h7LOQ4e2HfXhk/oj/KGpoTJy+C/RbEje7+NZNyLL775yZ4Df9o8YIeQwNO//0Slb1fXDhu/BGGYNXXcOytX+PkaJiRfvJz/wWfrss5e0uv1Mqnk+b8teuaxFPg5Z8//NefRV633nT9r0prVz1PpQ39mPvXSe9Zl3vvHM5PHJ+C+wI//fe/h+MHwDZ9+5YMz569QmbH9ole+uDxuaP+GxuZ+I+ciTuBoPse0SQ9TykAt9zHc7vfep+XVy7RD9vXxenTRdOvDwt18ObeQsVN71/btHtH5/958hlbGnGWvZp7JoQ4LtcnHazd8t3E3Yo3J4xJAGZDYnppGKwMZKsq8J19813517HA4Esf8WROZriJlZlIrd9yy6yBdyy6aM0VkPm9z2cJpRzLOwE1GpINADAAABdxJREFU57R/zflP333J28s4/w+uEHhyiwKf/GejtQNzFP3vtlo6BAdZbIKTrt+05+KVfMQVXIgDbu74YQM++fJHqLapnK7hHSeNi2/NvlU19WnpmVQaqt650ybQm6B5C38/bt2PHMdD0T2gOqM/pp84a11GqVRBRQMtJ8QCoSFGTUyfkvjiisXQ9GFuXb8pddGTbyCu4EIcjy2eAarftf+P3YzWwILZk1u5+7qNe+j00gXJdPqJpbMKrpccOX4WOY6YPj3oNHisktJbNott3vnbD5v3IhaouFVFJaB98+KKRVmHfjyw5Yt/rXouZcYEqFgRt7AuDviRs5PH7T90DG64zbt+0+mMdURiwmDwKPb2bKkg4N/p7MtQ41J5MX16joozdFy7hIcmJcZ9vykVOZToqEg6XVZR2f4WTFv55fcMZmcVakn4yQvnTP74nZey0jZ++M/nvTzZfHu9OayLY/a08X6+PtR9Br2yk6cvGk8sFC6dn9zKg2zceoBOP754BvxfsTylprYe+pPIocBXpdPQL0Cc89fV6//693qbwQyQxYLZk1J/+oz5JVmFdXHMmznx3MXc/GvF1MftjMs5O3m8qHUPBkGVVFZxm0onjhwCzh+80dY9h2wGo9rD9RuldDqoJbTQZhjORii03TqGG0OPf2MK9IbmP/46NC/AX0K332IrhNGee2oB4gR2g2AD+/Ue1D/61LlLq159ksoBu9BbIdozZ9r4bXvS7nkccO/QbXn5mSXUEb5f+45IKHRsU5Qit6CITgcF+aO2U8noOgX4+9osA7KrqbuD8EAnlurHSsTi4UP6QXh36sTRHYIDqa0jBvdDnMCu51iSMrWpWSGVSobE9qX+Bg2IhsqFLjB/5qRWHuqHzfvgUFQa2vAH0jKYAXJHQYdVUMuFYfZcmIwdPWzi2DiIllpvKmb8uqBA2/IKCQ4oK7cdsYB2WNKYOPojdKSPZ51/e83XY6c/CfeY/cM6HBbFAXXkI0kjIVQwc8nLzL8lK96im6UgF2YHwQ535A17f02n0uBIvv1xF2IBGL75JS2D/ghBNusy/fpGfb/27dWv/Q2a2NZbC2+U0i2GiC6duna2bHRDiwHamKV3a0kLJiSO+PbfqyAeapEPDaDDR09R6eLSCsQJLIoDwqAwKvYdoyNKUVJakX7iHP1x6YJpqHWs27QHqmH427H3MDTcEDu88d7a8rv9SQhyQ9DdosDKFx5FLb1Zm7uDcA+kHaPS0KKCcR9m/wK8EeTIpNJd+w4jPNCqsI7mdevSiUrksvbbLWDl1aH+fj7QU/3bsjm3q+sKCos1Wm39nQZ6K9wW/n7ewwbFUB9hzPNaUYlUIqmqrqNyYCx0zKih0KtMTBhSWHQT+vd19XIYwITuCbQ84C/tiDEs1v+hqNh+vSHeHHY3Nn+9uNTby0Pe2ARDVvQZwdBQC/Ts3hUuNpWj0WjhyOGdOhTftLwLwR9Afd+nV3eIucGpJ42Nv1FSBs4AXFdwoP8XH742dtSwjMzs1Wu+1mptP+gGu8+YnOjjbQhLRHXvOnf6BBj9gZGzlBlJ776xAgacv9mwE9fPGjSgD7S4e0R0hiHZnCv5tS1NExDZsgXTViyfCwkYK/jnh/9t5KQnxcrAm8WY2fv/v45ZC8AAKVwqi102bjuw6oOvqHTvnhGHdn7F3Lr06VVHT56zPtGXa1YmTxptnW8xKguxlrxTe6yL2RmVBaCx/OjC6RFdO1HjLBTg9ralpn3zw077HSVoa7/58hPQpWI6AAjz51zO/2r9duagiQUgJogZDh/cL6JbJ3AzzE0QX163KXXDln02qzM2cJdln9pDSFBA3+ju0ByGgGmbWsEgyvBOodDLgCb5lbxrNbV3Wr8vOAmI5YP3gq5xdU1dRWV1GaaZwh5EHAQsZJogAQsRBwELEQcBCxEHAQsRBwELEQcBCxEHAQsRBwELEQcBCxEHAQsRBwELEQcBCxEHAQsRBwELEQcBCxEHAQsRBwHL/wAAAP//NPFslgAAAAZJREFUAwAovA6akfm8HwAAAABJRU5ErkJggg==">
+<link rel="icon" type="image/png" sizes="192x192" href="data:image/png;base64,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">
+<link rel="icon" type="image/png" sizes="32x32" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAC2UlEQVR4nNRVS0wTQRienW27pbRd2i6FClIQkPASDVGT8jAGDYZwQAGNFxNISDSeTCQkRr0RTyZc9GBi4tmTT4yGGIOpRjAqmKI8QiyBPuzTPuhzu05T1LDdbtuQRvofNrMz3/zf/838/z8CbUsPyKUJQI7tvxJgGBjrl7h8sXsvg2gQoRmHl5n6HF53xDobhaQEU5Hw0fuQ28/wOIE8awwDfvkZiyuWGKyY6PnV6NiApKoEDp0QP50Nv/gYAjtRkGwuf0wixqQFmDcQj9rqZnZIwKjkEJ1MYiDAASWHD6YCBiONZOnqhZVqfHI25N7ko8HyPk1hVujbw9JbF6RZbclOgd0bo2NZ7UhB0NEoKFfhGw62M6c3PoOKgDVfTuFGW1S/EE12xX1EKEMaK7IQ11SB6+qEnEscXsopaHUxNkivmGmTk+NEpg0RFn7JREMI9ihhMp5DQVu9UP8tol+ItDVwB5UVnk2gJiFZCJdN9OIGrZJBVFmA19Li2f8oCv1CODHORERa/LY70Cgh0lsgwlqqtnCtNYIPixHUGDi9Z4LHi0pr//74Asyqhe7XEceaRQcqBYUEuPM8sGb7h9aqcfQ1/plJiwepehElw0C8rNhdLFEBrCziwYNUhcYJ5TEe/K55k7XFsK1BVKqIZx1qDChzjLaMulJGBDgOBtoJSraV08VyXKMkJp4EaDr93vx/cLbVQcJuXB358nUJQmxifNS4bjp3urt2316nyzN+/fLr6ZmWprojrU3tRw96PL6boyPzhuWuzsMer/9Ul25/jfb78g+WN3ar0JRQkgLx+f7uQDA0Z1i6ODRYXVmGcnDD/JNSKULhyLUrw48n3zx79dZqcyiKSLPVjpAEIbo0PCiXFSYrYBP09Rx/NzN3prerVK1CImY/GdbWLZSyqEyjJmVSQiREMZ7tO1mtLfNvBsWEqLe7w+5wK0jZ3fsPDzXXJRPk/yXnnOA3AAAA//+lqI7JAAAABklEQVQDAC5LNQQvHNftAAAAAElFTkSuQmCC">
+<style>
+:root{
+  --navy:#1f2f4a; --navy-2:#2c4166; --gold:#b8913a; --gold-soft:#f4ead3;
+  --bg:#f3f4f7; --card:#ffffff; --line:#dfe3ea; --text:#1d2433; --muted:#667085;
+  --yes:#1f7a4d; --yes-bg:#e3f4ea; --no:#b42318; --no-bg:#fde8e6;
+  --abs:#8a6d1f; --abs-bg:#fbf1d6; --rec:#4b5563; --rec-bg:#eceef2;
+  --radius:10px;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.45}
+button{font:inherit;cursor:pointer}
+button:disabled{cursor:not-allowed;opacity:.6}
+input,select,textarea{font:inherit;color:inherit}
+header{background:var(--navy);color:#fff}
+.hdr{max-width:1200px;margin:0 auto;padding:12px 16px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.hdr img{width:44px;height:44px;border-radius:9px;flex:none}
+.hdr h1{font-size:19px;margin:0;font-weight:600;letter-spacing:.2px}
+.hdr .sub{font-size:12px;color:#c9d3e6}
+.hdr .sp{flex:1}
+.hdr .who{font-size:13px;color:#dfe6f3;text-align:right}
+.hbtn{background:transparent;border:1px solid #4d6390;color:#fff;border-radius:7px;padding:6px 10px;font-size:13px}
+@media(max-width:600px){.hdr .sp{display:none}.hdr .who{text-align:left;flex-basis:100%}}
+.hbtn:hover{background:var(--navy-2)}
+nav{background:var(--navy-2)}
+.tabs{max-width:1200px;margin:0 auto;padding:0 16px;display:flex;gap:4px;overflow-x:auto}
+.tab{background:none;border:none;color:#c9d3e6;padding:11px 14px;border-bottom:3px solid transparent;white-space:nowrap;font-size:14px}
+.tab.on{color:#fff;border-bottom-color:var(--gold);font-weight:600}
+.tab .lock{font-size:11px;opacity:.8;margin-left:4px}
+main{max-width:1200px;margin:0 auto;padding:20px 16px 40px}
+footer{max-width:1200px;margin:0 auto;padding:0 16px 30px;color:var(--muted);font-size:12px}
+.bar{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
+.bar h2{margin:0;font-size:20px}
+.bar .sp{flex:1}
+.hint{color:var(--muted);font-size:13px}
+.btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 12px;font-size:14px;color:var(--text)}
+.btn:hover{background:#f7f8fa}
+.btn.pri{background:var(--navy);color:#fff;border-color:var(--navy)}
+.btn.pri:hover{background:var(--navy-2)}
+.btn.gold{background:var(--gold);border-color:var(--gold);color:#fff}
+.btn.danger{color:var(--no);border-color:#f1b8b2}
+.btn.danger:hover{background:var(--no-bg)}
+.btn.sm{padding:4px 9px;font-size:13px}
+.link{background:none;border:none;color:var(--navy-2);padding:0;text-decoration:underline;font-size:13px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);margin-bottom:12px;overflow:hidden}
+.chead{display:flex;align-items:center;gap:12px;padding:14px 16px;cursor:pointer;flex-wrap:wrap}
+.chead:hover{background:#fafbfc}
+.chev{width:18px;color:var(--muted);transition:transform .15s;flex:none}
+.card.open .chev{transform:rotate(90deg)}
+.ctitle{font-weight:600;font-size:16px}
+.cmeta{font-size:12.5px;color:var(--muted)}
+.badge{display:inline-block;font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:20px;background:#e8edf6;color:var(--navy-2);white-space:nowrap}
+.badge.req{background:var(--gold-soft);color:#7a5c12}
+.tally{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.pill{font-size:12.5px;padding:3px 9px;border-radius:20px;background:#eef0f4;white-space:nowrap}
+.pill.y{background:var(--yes-bg);color:var(--yes);font-weight:600}
+.pill.n{background:var(--no-bg);color:var(--no);font-weight:600}
+.pill.a{background:var(--abs-bg);color:var(--abs)}
+.pill.r{background:var(--rec-bg);color:var(--rec)}
+.cright{margin-left:auto;display:flex;gap:14px;align-items:center;flex-wrap:wrap;font-size:12.5px;color:var(--muted)}
+.myvote{font-weight:600}
+.cbody{border-top:1px solid var(--line);padding:16px;display:grid;grid-template-columns:1.25fr 1fr;gap:22px}
+@media(max-width:820px){.cbody{grid-template-columns:1fr}}
+.sec h4{margin:0 0 8px;font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+.sec+.sec{margin-top:18px}
+.kv{display:grid;grid-template-columns:150px 1fr;gap:4px 12px;font-size:14px}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;overflow-wrap:anywhere}
+@media(max-width:520px){.kv{grid-template-columns:1fr}.kv dt{margin-top:6px}}
+.summary{white-space:pre-wrap;font-size:14.5px;overflow-wrap:anywhere}
+.docs{list-style:none;margin:0;padding:0}
+.docs li{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px dashed var(--line);font-size:14px}
+.docs li:last-child{border-bottom:none}
+.pdf{font-size:10px;font-weight:700;background:#c0392b;color:#fff;border-radius:3px;padding:1px 4px;flex:none}
+.doclink{background:none;border:none;padding:0;color:var(--navy-2);text-decoration:underline;text-align:left;font-size:14px;overflow-wrap:anywhere}
+.docs .x{margin-left:auto}
+.votebtns{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.vb{border:1.5px solid var(--line);background:#fff;border-radius:8px;padding:7px 14px;font-weight:600}
+.vb.y.on{background:var(--yes);border-color:var(--yes);color:#fff}
+.vb.n.on{background:var(--no);border-color:var(--no);color:#fff}
+.vb.a.on{background:var(--abs);border-color:var(--abs);color:#fff}
+.vb.r.on{background:var(--rec);border-color:var(--rec);color:#fff}
+.voters{font-size:13.5px}
+.voters div{margin:3px 0}
+.voters .lbl{display:inline-block;min-width:92px;font-weight:600}
+.comment{padding:10px 0;border-bottom:1px solid var(--line)}
+.comment:last-child{border-bottom:none}
+.comment .ch{display:flex;gap:8px;align-items:baseline;font-size:13px;flex-wrap:wrap}
+.comment .ch b{font-size:14px}
+.comment .ch .when{color:var(--muted)}
+.comment .ch .acts{margin-left:auto;display:flex;gap:10px}
+.comment .txt{white-space:pre-wrap;font-size:14px;margin-top:3px;overflow-wrap:anywhere}
+.addc{display:flex;gap:8px;margin-top:10px}
+.addc textarea,.addc input{flex:1}
+textarea,input[type=text],input[type=email],input[type=password],input[type=date],select{border:1px solid #cfd5df;border-radius:7px;padding:7px 9px;background:#fff;width:100%}
+textarea{min-height:60px;resize:vertical}
+.chairbar{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap;padding-top:12px;border-top:1px dashed var(--line)}
+.chairbar .lbl{font-size:12px;color:var(--muted);align-self:center;margin-right:4px}
+.tbl-wrap{overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:var(--radius)}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th{background:#f6f7f9;text-align:left;font-size:12px;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);padding:9px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px;border-bottom:1px solid var(--line);vertical-align:top}
+tr:last-child td{border-bottom:none}
+td.w-court{min-width:120px}td.w-auth{min-width:190px}td.w-date{min-width:120px}
+.clamp{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;cursor:pointer;min-width:220px;white-space:pre-wrap}
+.clamp.open{display:block}
+.res{font-size:12px;font-weight:700;padding:3px 8px;border-radius:20px;white-space:nowrap;display:inline-block}
+.res.fav{background:var(--yes-bg);color:var(--yes)}
+.res.unf{background:var(--no-bg);color:var(--no)}
+.res.mix{background:var(--abs-bg);color:var(--abs)}
+.res.nr{background:#e3ecf8;color:#2c4f86}
+.res.tbd{background:#eceef2;color:#4b5563}
+.status-latest{font-size:13.5px}
+.status-latest .d,.hist .d{color:var(--muted);font-size:12px}
+.hist{background:#fafbfc}
+.hist ul{list-style:none;margin:0;padding:0}
+.hist li{padding:5px 0;font-size:13.5px;border-bottom:1px dashed var(--line)}
+.hist li:last-child{border-bottom:none}
+.hist .d{margin-right:6px}
+.section-title{font-size:16px;margin:26px 0 10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.section-title .count{font-size:12px;background:#e8edf6;color:var(--navy-2);border-radius:20px;padding:1px 8px}
+.step{display:grid;grid-template-columns:28px 230px 150px 1fr;gap:10px;align-items:start;padding:10px 0;border-bottom:1px solid var(--line)}
+.step:last-child{border-bottom:none}
+.step input[type=checkbox]{width:18px;height:18px;margin-top:6px}
+.step .nm{font-weight:600;padding-top:5px;font-size:14px}
+.step .nm small{display:block;font-weight:400;color:var(--muted);font-size:12px}
+.step.done .nm{color:var(--yes)}
+@media(max-width:820px){.step{grid-template-columns:28px 1fr}.step>*:nth-child(n+3){grid-column:2}}
+.extra{grid-column:2/-1;display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin-top:4px}
+.authpick{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:13.5px}
+.due{font-size:12px;font-weight:600;padding:2px 8px;border-radius:20px}
+.due.soon{background:var(--abs-bg);color:var(--abs)}
+.due.over{background:var(--no-bg);color:var(--no)}
+.due.ok{background:#eef0f4;color:var(--muted)}
+.progress{height:6px;background:#eceef2;border-radius:6px;overflow:hidden;width:120px}
+.progress span{display:block;height:100%;background:var(--gold)}
+.modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.45);display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;z-index:50;overflow-y:auto}
+.modal{background:#fff;border-radius:12px;max-width:680px;width:100%;padding:20px 22px;box-shadow:0 20px 50px rgba(0,0,0,.25)}
+.modal h3{margin:0 0 14px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.fgrid .full{grid-column:1/-1}
+@media(max-width:560px){.fgrid{grid-template-columns:1fr}}
+label.f{display:block;font-size:12.5px;font-weight:600;color:#475467}
+label.f>input,label.f>select,label.f>textarea{margin-top:4px}
+.mfoot{display:flex;justify-content:flex-end;gap:8px;margin-top:18px;flex-wrap:wrap}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:14px}
+.seg button{border:none;background:#fff;padding:7px 14px}
+.seg button.on{background:var(--navy);color:#fff}
+.warnbox{background:var(--no-bg);border:1px solid #f4c3bd;color:#7a1b12;border-radius:8px;padding:10px 12px;font-size:14px}
+.infobox{background:#eef3fb;border:1px solid #cfdbef;border-radius:8px;padding:10px 12px;font-size:14px}
+.toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:8px;font-size:14px;z-index:60;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:90vw}
+.toast.err{background:var(--no)}
+.login-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px}
+.login{background:#fff;border:1px solid var(--line);border-radius:14px;padding:28px;max-width:400px;width:100%;text-align:center}
+.login img{width:96px;height:96px;border-radius:18px}
+.login .fgrid{grid-template-columns:1fr;text-align:left;margin-top:16px}
+.login .err{color:var(--no);font-size:14px;min-height:1em}
+.empty{padding:28px;text-align:center;color:var(--muted);background:#fff;border:1px dashed var(--line);border-radius:var(--radius)}
+.muted{color:var(--muted)}
+.loading{padding:40px;text-align:center;color:var(--muted)}
+.temp-pw{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:18px;background:#f6f7f9;border:1px solid var(--line);border-radius:8px;padding:10px;text-align:center;user-select:all}
+</style>
+</head>
+<body>
+<div id="root"><div class="loading">Loading…</div></div>
+<script>
+/* ============================================================
+   IDC Amicus Committee App — v1.0.0
+   Front end for the grasse-apps-proxy Worker (appId 'amicus').
+   No keys in this file. Every permission is enforced by the Worker;
+   hiding buttons here is only for convenience.
+   ============================================================ */
+const APP_VERSION = '1.0.0';
+const WORKER_URL  = 'https://grasse-apps-proxy.ed-53c.workers.dev';
+const APP_ID      = 'amicus';
+const SESSION_KEY = 'amicus_session_v1';
+const MAX_PDF_BYTES = 25 * 1024 * 1024;
+const ICON = 'data:image/png;base64,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';
+
+const STEPS = [
+  {k:'board_report',   n:'Report to Board'},
+  {k:'board_approval', n:'Board Approval', s:'Checking adds the case to the Status Board'},
+  {k:'authors',        n:'Author(s) assigned'},
+  {k:'due',            n:'Brief due date', s:'Highlighted when near or overdue'},
+  {k:'counsel',        n:'Communicated with counsel'},
+  {k:'motion_filed',   n:'Motion for leave filed', s:'Ill. S. Ct. R. 345'},
+  {k:'motion_granted', n:'Motion for leave granted'},
+  {k:'draft',          n:'Draft received & circulated'},
+  {k:'filed',          n:'Brief filed', s:'Date flows to the Status Board'}
+];
+const RESULTS = ['Favorable','Unfavorable / Anti-IDC','Mixed / Partially favorable','Issue not reached (favorable)'];
+const ROLE_LABEL = {chair:'Chair', member:'Member', viewer:'Viewer (Status Board only)'};
+const STATUS_LABEL = {active:'Active', invited:'Invited — no password yet', inactive:'Inactive', pending:'Pending'};
+
+/* ---------- State ---------- */
+const S = {
+  session: null, me: null, screen: 'loading', authMsg: '', tab: 'review',
+  review: null, board: null, tracker: null, users: null,
+  open: {}, showAll: {}, editing: null, hist: {}
+};
+
+/* ---------- Small helpers ---------- */
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmtDate = d => { if (!d) return ''; const [y,m,dd] = String(d).slice(0,10).split('-'); return `${m}/${dd}/${y}`; };
+const fmtStamp = iso => { if (!iso) return ''; const d = new Date(iso);
+  return d.toLocaleDateString('en-US',{month:'2-digit',day:'2-digit',year:'numeric'}) + ' ' + d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}); };
+const localDay = iso => { const d = new Date(iso); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; };
+const isChair = () => S.me && S.me.role === 'chair';
+const isViewer = () => S.me && S.me.role === 'viewer';
+const today = () => (S.review && S.review.today) || (S.board && S.board.today) || localDay(new Date().toISOString());
+const daysTo = d => Math.round((new Date(d + 'T12:00:00') - new Date(today() + 'T12:00:00')) / 86400000);
+function toast(msg, isErr){ document.querySelectorAll('.toast').forEach(x => x.remove()); const t = document.createElement('div'); t.className = 'toast' + (isErr ? ' err' : ''); t.textContent = msg; document.body.appendChild(t); setTimeout(() => t.remove(), isErr ? 5000 : 2600); }
+function openModal(html){ closeModal(); const bg = document.createElement('div'); bg.className = 'modal-bg'; bg.id = 'modal'; bg.innerHTML = `<div class="modal">${html}</div>`; bg.addEventListener('mousedown', e => { if (e.target === bg) closeModal(); }); document.body.appendChild(bg); const f = bg.querySelector('input,textarea,select'); if (f) f.focus(); }
+function closeModal(){ const m = $('#modal'); if (m) m.remove(); }
+const val = id => { const el = document.getElementById(id); return el ? el.value : ''; };
+async function run(fn, btn){            // wraps any async action with error display
+  if (btn) btn.disabled = true;
+  try { return await fn(); }
+  catch (e) { toast(e.message || 'Something went wrong', true); }
+  finally { if (btn && document.body.contains(btn)) btn.disabled = false; }
+}
+
+/* ---------- Session storage (wrapped: storage can be unavailable) ---------- */
+function saveSession(s){ S.session = s; try { s ? localStorage.setItem(SESSION_KEY, JSON.stringify(s)) : localStorage.removeItem(SESSION_KEY); } catch(e){} }
+function loadSession(){ try { return JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); } catch(e){ return null; } }
+
+/* ---------- Worker API ---------- */
+async function post(action, payload, token){
+  const res = await fetch(WORKER_URL, { method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ appId: APP_ID, action, token, payload: payload || {} }) });
+  let data = {}; try { data = await res.json(); } catch(e){}
+  return { ok: res.ok, status: res.status, data };
+}
+async function refreshSession(){
+  if (!S.session || !S.session.refresh_token) return false;
+  const r = await post('refresh', { refresh_token: S.session.refresh_token });
+  if (r.ok && r.data.session) { saveSession(r.data.session); return true; }
+  return false;
+}
+async function api(action, payload){
+  if (S.session && S.session.expires_at && S.session.expires_at - Date.now()/1000 < 120) await refreshSession();
+  let r = await post(action, payload, S.session && S.session.access_token);
+  if (r.status === 401 && await refreshSession()) r = await post(action, payload, S.session.access_token);
+  if (r.status === 401) { signOut('Your session has expired. Please sign in again.'); throw new Error('Please sign in again.'); }
+  if (!r.ok) throw new Error(r.data.error || ('Error ' + r.status));
+  return r.data;
+}
+
+/* ---------- Auth flow ---------- */
+async function boot(){
+  const s = loadSession();
+  if (s) {
+    S.session = s;
+    try { const r = await api('me'); S.me = r.me; return enterApp(); }
+    catch(e){ /* falls through to sign-in */ }
+  }
+  S.screen = 'login'; render();
+}
+function enterApp(){
+  S.screen = 'app';
+  S.tab = isViewer() ? 'board' : 'review';
+  render(); loadTab();
+}
+function signOut(msg){
+  saveSession(null); S.me = null; S.review = S.board = S.tracker = S.users = null;
+  S.open = {}; S.showAll = {}; S.hist = {}; S.editing = null; closeModal();
+  S.screen = 'login'; S.authMsg = msg || ''; render();
+}
+async function doSignIn(btn){
+  S.authMsg = '';
+  await run(async () => {
+    const r = await post('signIn', { email: val('li_email'), password: val('li_pw') });
+    if (!r.ok) { S.authMsg = r.data.error || 'Sign-in failed.'; return render(); }
+    if (r.data.pending) { S.screen = 'pending'; return render(); }
+    saveSession(r.data.session); S.me = r.data.me; enterApp();
+  }, btn);
+}
+async function doSignUp(btn){
+  S.authMsg = '';
+  if (val('su_pw') !== val('su_pw2')) { S.authMsg = 'The two passwords do not match.'; return render(true); }
+  await run(async () => {
+    const r = await post('signUp', { name: val('su_name'), email: val('su_email'), password: val('su_pw') });
+    if (!r.ok) { S.authMsg = r.data.error || 'Could not create account.'; return render(true); }
+    if (r.data.pending) { S.screen = 'pending'; return render(); }
+    saveSession(r.data.session); S.me = r.data.me; enterApp();
+    toast(`Welcome, ${r.data.me.name}!`);
+  }, btn);
+}
+
+/* ---------- Data loading ---------- */
+async function loadTab(){
+  const t = S.tab;
+  await run(async () => {
+    if (t === 'review')  S.review  = await api('getReview');
+    if (t === 'board')   S.board   = await api('getBoard');
+    if (t === 'tracker') S.tracker = await api('getTracker');
+    if (t === 'users')   S.users   = await api('listUsers');
+    if (S.tab === t) render();
+  });
+}
+function go(tab){ S.tab = tab; S.hist = {}; S.editing = null; render(); loadTab(); }
+
+/* ---------- PDF upload / open ---------- */
+async function uploadPdf(target, file){         // target = {case_id} or {board_id}
+  if (!file) return;
+  if (!/\.pdf$/i.test(file.name) || (file.type && file.type !== 'application/pdf')) throw new Error(`${file.name} is not a PDF.`);
+  if (file.size > MAX_PDF_BYTES) throw new Error(`${file.name} is larger than 25 MB.`);
+  const link = await api('getUploadLink', { ...target, file_name: file.name, content_type: 'application/pdf', file_size: file.size });
+  const put = await fetch(link.uploadUrl, { method:'PUT', headers:{ 'Content-Type':'application/pdf' }, body: file });
+  if (!put.ok) throw new Error(`Upload of ${file.name} failed (${put.status}).`);
+  await api('recordDocument', { ...target, storage_path: link.storage_path, file_name: file.name, file_size: file.size });
+}
+async function uploadMany(target, files){
+  const list = [...(files || [])]; let ok = 0;
+  for (let i = 0; i < list.length; i++) {
+    toast(`Uploading ${i+1} of ${list.length}: ${list[i].name}…`);
+    try { await uploadPdf(target, list[i]); ok++; } catch(e) { toast(e.message, true); await new Promise(r => setTimeout(r, 1500)); }
+  }
+  if (list.length) toast(`${ok} of ${list.length} PDF(s) uploaded`);
+  return ok;
+}
+async function openDoc(id){
+  const w = window.open('', '_blank');           // opened now so pop-up blockers allow it
+  try {
+    const r = await api('getDocLink', { id });
+    if (w) w.location.href = r.url; else window.location.href = r.url;
+  } catch(e) { if (w) w.close(); toast(e.message, true); }
+}
+</script>
+<script>
+/* ============================================================
+   RENDERING
+   ============================================================ */
+function render(keep){
+  const saved = {};
+  if (keep) document.querySelectorAll('#root input[id], #root textarea[id]').forEach(el => { if (el.type !== 'file' && el.type !== 'checkbox') saved[el.id] = el.value; });
+  const root = $('#root');
+  if (S.screen === 'loading') root.innerHTML = '<div class="loading">Loading…</div>';
+  else if (S.screen !== 'app') root.innerHTML = renderAuth();
+  else root.innerHTML = renderShell();
+  if (keep) Object.entries(saved).forEach(([id, v]) => { const el = document.getElementById(id); if (el) el.value = v; });
+}
+
+function renderAuth(){
+  const logo = `<img src="${ICON}" alt=""><h2 style="margin:12px 0 2px">IDC Amicus Committee</h2>`;
+  const err = `<div class="err" id="auth_err">${esc(S.authMsg)}</div>`;
+  if (S.screen === 'pending') return `<div class="login-wrap"><div class="login">${logo}
+    <div class="infobox" style="margin-top:16px;text-align:left">Your account was created and is <b>waiting for approval</b> by the Committee Chair. You’ll be able to sign in once you’re approved.</div>
+    <div class="mfoot" style="justify-content:center"><button class="btn" onclick="S.screen='login';S.authMsg='';render()">Back to sign in</button></div></div></div>`;
+  if (S.screen === 'signup') return `<div class="login-wrap"><div class="login">${logo}<div class="muted">Create your account</div>
+    <form class="fgrid" onsubmit="event.preventDefault();doSignUp(this.querySelector('button[type=submit]'))">
+      <label class="f">Full name<input type="text" id="su_name" autocomplete="name"></label>
+      <label class="f">Email<input type="email" id="su_email" autocomplete="email" required></label>
+      <label class="f">Password (at least 8 characters)<input type="password" id="su_pw" autocomplete="new-password" required minlength="8"></label>
+      <label class="f">Confirm password<input type="password" id="su_pw2" autocomplete="new-password" required></label>
+      ${err}
+      <button class="btn pri" type="submit">Create account</button>
+      <div class="hint">Use the email address the Chair has on file for you. Committee members on the list get access right away; anyone else will wait for the Chair’s approval.</div>
+      <button class="link" type="button" onclick="S.screen='login';S.authMsg='';render()">Already have an account? Sign in</button>
+    </form></div></div>`;
+  return `<div class="login-wrap"><div class="login">${logo}<div class="muted">Sign in to continue</div>
+    <form class="fgrid" onsubmit="event.preventDefault();doSignIn(this.querySelector('button[type=submit]'))">
+      <label class="f">Email<input type="email" id="li_email" autocomplete="username" required></label>
+      <label class="f">Password<input type="password" id="li_pw" autocomplete="current-password" required></label>
+      ${err}
+      <button class="btn pri" type="submit">Sign in</button>
+      <button class="link" type="button" onclick="S.screen='signup';S.authMsg='';render()">First time here? Create your account</button>
+      <div class="hint">Forgot your password? Contact the Committee Chair for a temporary one.</div>
+    </form></div></div>`;
+}
+
+function renderShell(){
+  const tabs = [
+    ...(!isViewer() ? [['review','Case Review']] : []),
+    ...(isChair() ? [['tracker','Chair Tracker <span class="lock">🔒</span>']] : []),
+    ['board','Status Board']
+  ];
+  const pending = isChair() && S.users && S.users.users.some(u => u.status === 'pending');
+  let body = '<div class="loading">Loading…</div>';
+  if (S.tab === 'review' && S.review) body = renderReview();
+  if (S.tab === 'tracker' && S.tracker) body = renderTracker();
+  if (S.tab === 'board' && S.board) body = renderBoard();
+  if (S.tab === 'users' && S.users) body = renderUsers();
+  return `
+  <header><div class="hdr">
+    <img src="${ICON}" alt="">
+    <div><h1>IDC Amicus Committee</h1><div class="sub">Illinois Defense Counsel</div></div>
+    <div class="sp"></div>
+    <div class="who">Signed in as <b>${esc(S.me.name)}</b><br>${esc(ROLE_LABEL[S.me.role])}</div>
+    ${isChair() ? `<button class="hbtn" onclick="go('users')">Users${pending ? ' •' : ''}</button>` : ''}
+    <button class="hbtn" onclick="changePasswordModal()">Password</button>
+    <button class="hbtn" onclick="signOut()">Sign out</button>
+  </div></header>
+  <nav><div class="tabs">${tabs.map(([k,l]) => `<button class="tab ${S.tab===k?'on':''}" onclick="go('${k}')">${l}</button>`).join('')}</div></nav>
+  <main>${body}</main>
+  <footer>IDC Amicus Committee app v${APP_VERSION} · Questions or access problems? Contact the Committee Chair.</footer>`;
+}
+
+/* ============================================================
+   TAB 1 — CASE REVIEW
+   ============================================================ */
+function reviewIndex(){
+  const R = S.review, by = (arr, k) => arr.reduce((m, x) => ((m[x[k]] ||= []).push(x), m), {});
+  return { votes: by(R.votes, 'case_id'), comments: by(R.comments, 'case_id'), docs: by(R.documents, 'case_id'),
+           names: Object.fromEntries(R.members.map(m => [m.id, m.name])) };
+}
+function tallyOf(votes){ const t = {yes:0,no:0,abstain:0,recuse:0}; (votes||[]).forEach(v => t[v.vote]++); t.total = t.yes+t.no+t.abstain+t.recuse; return t; }
+const lockedCase = c => c.vote_deadline && today() > c.vote_deadline;
+
+function renderReview(){
+  const R = S.review, ix = reviewIndex();
+  return `<div class="bar"><h2>Case Review</h2><span class="hint">${R.cases.length} open for comment and vote · click a case to expand</span>
+    <div class="sp"></div>${isChair() ? `<button class="btn pri" onclick="caseModal()">+ New Case</button>` : ''}</div>
+    ${R.cases.length ? R.cases.map(c => caseCard(c, ix)).join('') : '<div class="empty">No cases are open for review right now.</div>'}
+    ${renderArchive()}`;
+}
+
+function caseCard(c, ix){
+  const votes = ix.votes[c.id] || [], t = tallyOf(votes), mine = (votes.find(v => v.member_id === S.me.id) || {}).vote;
+  const comments = ix.comments[c.id] || [], open = S.open[c.id];
+  const VL = {yes:'Yes', no:'No', abstain:'Abstain', recuse:'Recuse'};
+  const dl = c.vote_deadline ? (lockedCase(c) ? `<span style="color:var(--no)">Voting closed ${fmtDate(c.vote_deadline)}</span>` : `Vote by ${fmtDate(c.vote_deadline)}`) : '';
+  return `<div class="card ${open?'open':''}">
+    <div class="chead" onclick="S.open['${c.id}']=!S.open['${c.id}'];render(true)">
+      <svg class="chev" viewBox="0 0 20 20" fill="currentColor"><path d="M7 4l6 6-6 6"/></svg>
+      <div>
+        <div class="ctitle">${esc(c.case_name)}</div>
+        <div class="cmeta"><span class="badge ${c.case_type==='request'?'req':''}">${c.case_type==='pla'?'PLA Granted':'Outside Request'}</span>
+          ${c.court_no ? ' · No. ' + esc(c.court_no) : ''} · Posted ${fmtStamp(c.created_at).split(' ')[0]}</div>
+      </div>
+      <div class="cright">
+        <div class="tally"><span class="pill">${t.total} vote${t.total===1?'':'s'}</span><span class="pill y">Yes ${t.yes}</span><span class="pill n">No ${t.no}</span>
+          ${t.abstain?`<span class="pill a">Abstain ${t.abstain}</span>`:''}${t.recuse?`<span class="pill r">Recuse ${t.recuse}</span>`:''}</div>
+        <span>Your vote: <span class="myvote">${mine ? VL[mine] : '—'}</span></span>
+        <span>💬 ${comments.length}</span>
+        ${dl ? `<span>${dl}</span>` : ''}
+      </div>
+    </div>
+    ${open ? caseBody(c, votes, t, comments, ix) : ''}
+  </div>`;
+}
+
+function caseBody(c, votes, t, comments, ix){
+  const details = c.case_type === 'pla'
+    ? `<dl class="kv"><dt>Supreme Court No.</dt><dd>${esc(c.court_no)||'—'}</dd><dt>Appellate citation</dt><dd>${esc(c.app_cite)||'—'}${c.district?' ('+esc(c.district)+')':''}</dd>
+       <dt>PLA granted</dt><dd>${fmtDate(c.pla_granted)||'—'}</dd><dt>Appellant</dt><dd>${esc(c.appellant)||'—'}</dd><dt>Issue(s) presented</dt><dd>${esc(c.issues)||'—'}</dd></dl>
+       <div class="sec" style="margin-top:14px"><h4>Summary</h4><div class="summary">${esc(c.summary)||'<span class="muted">No summary yet.</span>'}</div></div>`
+    : `<dl class="kv"><dt>Court / case no.</dt><dd>${esc(c.court_no)||'—'}</dd><dt>Requested by</dt><dd>${esc(c.requester_name)||'—'}${c.requester_firm?', '+esc(c.requester_firm):''}</dd>
+       <dt>Contact</dt><dd>${esc(c.requester_contact)||'—'}</dd><dt>Received</dt><dd>${fmtDate(c.date_received)||'—'}</dd></dl>
+       <div class="sec" style="margin-top:14px"><h4>Facts / Notes</h4><div class="summary">${esc(c.facts_notes)||'<span class="muted">None yet.</span>'}</div></div>`;
+  const docs = ix.docs[c.id] || [];
+  const docHtml = `<div class="sec"><h4>Documents</h4>
+    ${docs.length ? `<ul class="docs">${docs.map(d => `<li><span class="pdf">PDF</span><button class="doclink" onclick="openDoc('${d.id}')">${esc(d.file_name)}</button>
+      ${isChair() ? `<button class="link x" style="color:var(--no)" onclick="removeDoc('${d.id}','${esc(d.file_name).replace(/'/g,'')}')">remove</button>` : ''}</li>`).join('')}</ul>` : '<div class="hint">No documents uploaded.</div>'}
+    ${isChair() ? `<label class="btn sm" style="display:inline-block;margin-top:8px">+ Add PDF<input type="file" accept="application/pdf,.pdf" multiple hidden onchange="addDocs({case_id:'${c.id}'},this)"></label>` : ''}</div>`;
+
+  const lk = lockedCase(c), mine = (votes.find(v => v.member_id === S.me.id) || {}).vote;
+  const vb = (k,l,cl) => `<button class="vb ${cl} ${mine===k?'on':''}" ${lk?'disabled':''} onclick="castVote('${c.id}','${k}',this)">${l}</button>`;
+  const voterMap = Object.fromEntries(votes.map(v => [v.member_id, v.vote]));
+  const group = k => S.review.members.filter(m => voterMap[m.id] === k).map(m => esc(m.name)).join(', ') || '<span class="muted">—</span>';
+  const notVoted = S.review.members.filter(m => !voterMap[m.id]).map(m => esc(m.name)).join(', ') || '<span class="muted">Everyone has voted</span>';
+  const voteHtml = `<div class="sec"><h4>Your vote — should IDC participate as amicus?</h4>
+    <div class="votebtns">${vb('yes','Yes','y')}${vb('no','No','n')}${vb('abstain','Abstain','a')}${vb('recuse','Recuse','r')}</div>
+    <div class="hint" style="margin-bottom:8px">${lk ? 'Voting closed on the deadline.' : 'You can change your vote at any time' + (c.vote_deadline ? ' until the deadline' : '') + '.'}</div>
+    <div class="voters">
+      <div><span class="lbl" style="color:var(--yes)">Yes (${t.yes})</span>${group('yes')}</div>
+      <div><span class="lbl" style="color:var(--no)">No (${t.no})</span>${group('no')}</div>
+      <div><span class="lbl" style="color:var(--abs)">Abstain (${t.abstain})</span>${group('abstain')}</div>
+      <div><span class="lbl" style="color:var(--rec)">Recuse (${t.recuse})</span>${group('recuse')}</div>
+      <div><span class="lbl muted">Not voted</span>${notVoted}</div>
+    </div></div>`;
+
+  const all = S.showAll[c.id], N = comments.length, shown = all ? comments : comments.slice(-3);
+  const commentHtml = `<div class="sec"><h4>Comments (${N})</h4>
+    ${N > 3 ? `<button class="link" onclick="S.showAll['${c.id}']=${!all};render(true)">${all ? 'Show fewer' : `Show ${N-3} earlier comment${N-3===1?'':'s'}`}</button>` : ''}
+    ${shown.map(m => commentRow(c, m, ix)).join('') || '<div class="hint">No comments yet.</div>'}
+    <div class="addc"><textarea id="nc_${c.id}" placeholder="Add a comment… (if you are replying to someone, just say so)"></textarea>
+      <button class="btn pri" onclick="addComment('${c.id}',this)">Post</button></div></div>`;
+
+  const chair = isChair() ? `<div class="chairbar"><span class="lbl">Chair actions:</span>
+    <button class="btn sm gold" onclick="approveModal('${c.id}')">✓ Approve for Amicus</button>
+    <button class="btn sm danger" onclick="declineModal('${c.id}')">Decline &amp; Delete</button>
+    <button class="btn sm" onclick="deadlineModal('${c.id}')">${c.vote_deadline ? 'Change' : 'Set'} deadline</button>
+    <button class="btn sm" onclick="caseModal('${c.id}')">Edit case</button></div>` : '';
+  return `<div class="cbody"><div>${details}${docHtml}</div><div>${voteHtml}${commentHtml}</div>${chair}</div>`;
+}
+
+function commentRow(c, m, ix){
+  const mine = m.member_id === S.me.id, who = ix.names[m.member_id] || 'Former member';
+  if (S.editing === m.id) return `<div class="comment"><div class="ch"><b>${esc(who)}</b></div>
+    <textarea id="ed_${m.id}">${esc(m.body)}</textarea>
+    <div style="display:flex;gap:6px;margin-top:6px"><button class="btn sm pri" onclick="saveComment('${m.id}',this)">Save</button><button class="btn sm" onclick="S.editing=null;render(true)">Cancel</button></div></div>`;
+  return `<div class="comment"><div class="ch"><b>${esc(who)}</b><span class="when">${fmtStamp(m.created_at)}${m.edited_at ? ' · (edited)' : ''}</span>
+    <span class="acts">${mine ? `<button class="link" onclick="S.editing='${m.id}';render(true)">Edit</button>` : ''}
+    ${isChair() ? `<button class="link" style="color:var(--no)" onclick="deleteComment('${m.id}',this)">Delete</button>` : ''}</span></div>
+    <div class="txt">${esc(m.body)}</div></div>`;
+}
+
+function renderArchive(){
+  const A = S.review.archive;
+  return `<div class="section-title">Archive — every case presented <span class="count">${A.length}</span></div>
+  ${A.length ? `<div class="tbl-wrap"><table><thead><tr><th>Case</th><th>Court No.</th><th>Type</th><th>Presented</th><th>Final vote</th><th>Outcome</th></tr></thead><tbody>
+  ${A.map(a => `<tr><td>${esc(a.case_name)}</td><td>${esc(a.court_no)}</td><td>${a.case_type==='pla'?'PLA':'Request'}</td><td>${fmtDate(a.presented_at)}</td>
+    <td style="white-space:nowrap">${a.yes_count} Yes / ${a.no_count} No${a.abstain_count||a.recuse_count?` <span class="muted">(${a.abstain_count} abst., ${a.recuse_count} rec.)</span>`:''}</td>
+    <td><span class="res ${a.outcome.startsWith('Approved')?'fav':'tbd'}">${esc(a.outcome)}</span></td></tr>`).join('')}
+  </tbody></table></div>` : '<div class="empty">No cases have been decided yet.</div>'}`;
+}
+
+/* ---- Case Review actions ---- */
+const reloadReview = async () => { S.review = await api('getReview'); render(true); };
+function castVote(caseId, vote, btn){ run(async () => { await api('castVote', { case_id: caseId, vote }); await reloadReview(); }, btn); }
+function addComment(caseId, btn){
+  const el = $('#nc_' + caseId), body = el.value.trim(); if (!body) return;
+  run(async () => { await api('addComment', { case_id: caseId, body }); el.value = ''; await reloadReview(); }, btn);
+}
+function saveComment(id, btn){ run(async () => { await api('editComment', { id, body: val('ed_' + id) }); S.editing = null; await reloadReview(); }, btn); }
+function deleteComment(id, btn){ if (!confirm('Delete this comment?')) return; run(async () => { await api('deleteComment', { id }); await reloadReview(); toast('Comment deleted'); }, btn); }
+function addDocs(target, input){ const files = [...input.files]; input.value = ''; run(async () => { await uploadMany(target, files); await reloadAfterDocChange(); }); }
+function removeDoc(id, name){ if (!confirm(`Permanently delete ${name}?`)) return; run(async () => { await api('deleteDocument', { id }); await reloadAfterDocChange(); toast('Document deleted'); }); }
+async function reloadAfterDocChange(){ if (S.tab === 'review') await reloadReview(); else if (S.tab === 'tracker') { S.tracker = await api('getTracker'); render(true); } else if (S.tab === 'board') { S.board = await api('getBoard'); render(true); } }
+
+const CASE_FIELDS = ['case_name','court_no','app_cite','district','pla_granted','appellant','vote_deadline','issues','summary','requester_name','requester_firm','requester_contact','date_received','facts_notes'];
+function caseModal(id, typeOverride, carry){
+  const c = id ? S.review.cases.find(x => x.id === id) : null;
+  const v = carry || c || {};
+  const type = typeOverride || (c ? c.case_type : 'pla');
+  const pla = type === 'pla';
+  const inp = (k, label, cls, t) => `<label class="f ${cls||''}">${label}<input type="${t||'text'}" id="cf_${k}" value="${esc(v[k]||'')}"></label>`;
+  const area = (k, label, h) => `<label class="f full">${label}<textarea id="cf_${k}" style="min-height:${h||70}px">${esc(v[k]||'')}</textarea></label>`;
+  const sel = (k, label, opts) => `<label class="f">${label}<select id="cf_${k}">${opts.map(o => `<option ${v[k]===o?'selected':''}>${o}</option>`).join('')}</select></label>`;
+  openModal(`<h3>${c ? 'Edit Case' : 'New Case'}</h3>
+    <div class="seg"><button class="${pla?'on':''}" onclick="caseModal(${id?`'${id}'`:'null'},'pla',collectCase())">PLA Granted</button><button class="${!pla?'on':''}" onclick="caseModal(${id?`'${id}'`:'null'},'request',collectCase())">Outside Request</button></div>
+    <div class="fgrid">
+      ${inp('case_name','Case name','full')}
+      ${pla ? `${inp('court_no','Supreme Court No.')}${inp('pla_granted','Date PLA granted','', 'date')}
+        ${inp('app_cite','Appellate citation')}${sel('district','District',['','First District','Second District','Third District','Fourth District','Fifth District'])}
+        ${sel('appellant','Appellant',['','Defendant','Plaintiff','Other'])}${inp('vote_deadline','Voting deadline (optional)','','date')}
+        ${area('issues','Issue(s) presented')}${area('summary','Summary',140)}`
+      : `${inp('court_no','Court / case no. (optional)')}${inp('date_received','Date received','','date')}
+        ${inp('requester_name','Requester name')}${inp('requester_firm','Requester firm')}
+        ${inp('requester_contact','Requester contact (email / phone)')}${inp('vote_deadline','Voting deadline (optional)','','date')}
+        ${area('facts_notes','Facts / Notes',140)}`}
+      ${c ? '' : `<label class="f full">Documents (PDF, 25 MB max each)<input type="file" id="cf_files" accept="application/pdf,.pdf" multiple></label>`}
+    </div>
+    <div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn pri" onclick="saveCase(${id?`'${id}'`:'null'},'${type}',this)">${c ? 'Save changes' : 'Post to Committee'}</button></div>`);
+}
+function collectCase(){ const o = {}; CASE_FIELDS.forEach(k => { const el = document.getElementById('cf_' + k); if (el) o[k] = el.value; }); return o; }
+function saveCase(id, type, btn){
+  const fields = collectCase();
+  if (!fields.case_name.trim()) return toast('Case name is required', true);
+  const files = id ? [] : [...($('#cf_files') || {}).files || []];
+  run(async () => {
+    const payload = { case_type: type, ...fields };
+    let c;
+    if (id) c = (await api('updateCase', { id, ...payload })).case;
+    else c = (await api('createCase', payload)).case;
+    closeModal();
+    if (files.length) await uploadMany({ case_id: c.id }, files);
+    S.open[c.id] = true; await reloadReview(); toast(id ? 'Case updated' : 'Case posted to the committee');
+  }, btn);
+}
+function deadlineModal(id){
+  const c = S.review.cases.find(x => x.id === id);
+  openModal(`<h3>Voting deadline</h3><label class="f">Deadline<input type="date" id="dl_v" value="${c.vote_deadline||''}"></label>
+    <div class="hint" style="margin-top:6px">Voting locks after this date (Central time). Leave blank for no deadline.</div>
+    <div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="saveDeadline('${id}',this)">Save</button></div>`);
+}
+function saveDeadline(id, btn){ run(async () => { await api('updateCase', { id, vote_deadline: val('dl_v') }); closeModal(); await reloadReview(); }, btn); }
+function approveModal(id){
+  const c = S.review.cases.find(x => x.id === id), t = tallyOf(reviewIndex().votes[id]);
+  openModal(`<h3>Approve for Amicus?</h3><div class="infobox"><b>${esc(c.case_name)}</b><br>Final tally: ${t.total} votes — ${t.yes} Yes, ${t.no} No, ${t.abstain} Abstain, ${t.recuse} Recuse.</div>
+    <p>The case moves to your <b>Chair Tracker</b>, its documents are kept permanently, and the Archive records “Approved for amicus.” Voting and comments close.</p>
+    <div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn gold" onclick="doApprove('${id}',this)">Approve</button></div>`);
+}
+function doApprove(id, btn){ run(async () => { await api('approveCase', { id }); closeModal(); await reloadReview(); toast('Moved to the Chair Tracker'); }, btn); }
+function declineModal(id){
+  const c = S.review.cases.find(x => x.id === id), ix = reviewIndex(), t = tallyOf(ix.votes[id]), docs = ix.docs[id] || [], n = (ix.comments[id] || []).length;
+  openModal(`<h3>Decline &amp; Delete</h3>
+    <div class="warnbox"><b>This cannot be undone.</b> The following will be permanently deleted:
+      <ul style="margin:6px 0 0 18px;padding:0"><li>${docs.length} document(s)${docs.length?': '+docs.map(d=>esc(d.file_name)).join(', '):''}</li><li>${n} comment(s)</li><li>${t.total} vote(s)</li><li>The case summary / facts</li></ul></div>
+    <p>An Archive entry is kept: <b>${esc(c.case_name)}</b> — ${t.yes} Yes / ${t.no} No — Outcome: <b>No IDC involvement</b>.</p>
+    <label class="f">Type DELETE to confirm<input type="text" id="del_ok" autocomplete="off"></label>
+    <div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn danger" onclick="doDecline('${id}',this)">Delete permanently</button></div>`);
+}
+function doDecline(id, btn){
+  if (val('del_ok').trim().toUpperCase() !== 'DELETE') return toast('Type DELETE to confirm', true);
+  run(async () => { await api('declineCase', { id, confirm: 'DELETE' }); closeModal(); await reloadReview(); toast('Case and documents deleted; archive entry saved'); }, btn);
+}
+</script>
+<script>
+/* ============================================================
+   TAB 2 — CHAIR TRACKER
+   ============================================================ */
+function renderTracker(){
+  const T = S.tracker;
+  return `<div class="bar"><h2>Chair Tracker</h2><span class="hint">🔒 Visible only to you. Each step has a checkbox, date and notes — skip any you don’t need. Changes save automatically.</span></div>
+    ${T.cases.length ? T.cases.map(trackerCard).join('') : '<div class="empty">No approved cases yet. Use “Approve for Amicus” on a case in Case Review.</div>'}`;
+}
+function trackerOf(caseId){ return S.tracker.trackers.find(t => t.case_id === caseId) || { steps: {} }; }
+function stepOf(t, k){ return Object.assign({ done:false, date:'', notes:'' }, (t.steps || {})[k] || {}); }
+function trackerCard(c){
+  const t = trackerOf(c.id), open = S.open['t' + c.id] !== false;
+  const done = STEPS.filter(s => stepOf(t, s.k).done).length;
+  const due = stepOf(t, 'due').date, filed = stepOf(t, 'filed').done;
+  let dueBadge = '';
+  if (due && !filed) { const n = daysTo(due); dueBadge = `<span class="due ${n<0?'over':n<=14?'soon':'ok'}">Brief due ${fmtDate(due)}${n<0?' — OVERDUE':n<=14?` — ${n} day${n===1?'':'s'}`:''}</span>`; }
+  const onBoard = S.tracker.board.find(b => b.case_id === c.id);
+  const docs = S.tracker.documents.filter(d => d.case_id === c.id);
+  return `<div class="card ${open?'open':''}">
+    <div class="chead" onclick="S.open['t${c.id}']=!(S.open['t${c.id}']!==false);render(true)">
+      <svg class="chev" viewBox="0 0 20 20" fill="currentColor"><path d="M7 4l6 6-6 6"/></svg>
+      <div><div class="ctitle">${esc(c.case_name)}</div><div class="cmeta">${c.court_no?'No. '+esc(c.court_no)+' · ':''}Approved ${fmtStamp(c.approved_at).split(' ')[0]}${onBoard?' · <b>On Status Board</b>':''}</div></div>
+      <div class="cright">${dueBadge}<div class="progress"><span style="width:${done/STEPS.length*100}%"></span></div><span>${done} of ${STEPS.length} steps</span></div>
+    </div>
+    ${open ? `<div style="padding:4px 16px 16px;border-top:1px solid var(--line)">
+      ${STEPS.map(s => stepRow(c, t, s)).join('')}
+      <label class="f" style="margin-top:12px">General notes<textarea id="tg_${c.id}" onchange="saveTrackerField('${c.id}','general_notes',this.value)">${esc(t.general_notes||'')}</textarea></label>
+      <div class="sec" style="margin-top:16px"><h4>Case documents (kept permanently)</h4>
+        ${docs.length ? `<ul class="docs">${docs.map(d => `<li><span class="pdf">PDF</span><button class="doclink" onclick="openDoc('${d.id}')">${esc(d.file_name)}</button><button class="link x" style="color:var(--no)" onclick="removeDoc('${d.id}','${esc(d.file_name).replace(/'/g,'')}')">remove</button></li>`).join('')}</ul>` : '<div class="hint">No documents.</div>'}
+        <label class="btn sm" style="display:inline-block;margin-top:8px">+ Add PDF<input type="file" accept="application/pdf,.pdf" multiple hidden onchange="addDocs({case_id:'${c.id}'},this)"></label>
+      </div></div>` : ''}
+  </div>`;
+}
+function stepRow(c, t, s){
+  const st = stepOf(t, s.k), id = c.id;
+  let extra = '';
+  if (s.k === 'authors') {
+    const sel = st.member_ids || [];
+    extra = `<div class="extra" style="grid-template-columns:1fr"><div><div class="hint" style="margin-bottom:4px">Authors with app accounts (they can add status updates on the Status Board):</div>
+      <div class="authpick">${S.tracker.members.map(m => `<label><input type="checkbox" ${sel.includes(m.id)?'checked':''} onchange="toggleAuthor('${id}','${m.id}',this.checked)"> ${esc(m.name)}</label>`).join('')}</div></div>
+      <label class="f">Outside co-authors (listed by name only)<input type="text" id="to_${id}" value="${esc(t.outside_authors||'')}" placeholder="e.g. Bruce Pfaff (ITLA)" onchange="saveTrackerField('${id}','outside_authors',this.value)"></label></div>`;
+  }
+  if (s.k === 'counsel') {
+    extra = `<div class="extra">${[['counsel_name','Counsel name'],['counsel_firm','Firm'],['counsel_email','Email'],['counsel_phone','Phone']].map(([k,l]) =>
+      `<label class="f">${l}<input type="text" id="tc_${k}_${id}" value="${esc(t[k]||'')}" onchange="saveTrackerField('${id}','${k}',this.value)"></label>`).join('')}</div>`;
+  }
+  return `<div class="step ${st.done?'done':''}">
+    <input type="checkbox" ${st.done?'checked':''} onchange="saveStep('${id}','${s.k}',{done:this.checked})" aria-label="${s.n}">
+    <div class="nm">${s.n}${s.s?`<small>${s.s}</small>`:''}</div>
+    <input type="date" value="${esc(st.date)}" onchange="saveStep('${id}','${s.k}',{date:this.value})" aria-label="${s.n} date">
+    <input type="text" id="tn_${s.k}_${id}" value="${esc(st.notes)}" placeholder="Notes" onchange="saveStep('${id}','${s.k}',{notes:this.value},true)">
+    ${extra}
+  </div>`;
+}
+async function applyTrackerResult(r, quiet){
+  const i = S.tracker.trackers.findIndex(t => t.case_id === r.tracker.case_id);
+  if (i >= 0) S.tracker.trackers[i] = r.tracker; else S.tracker.trackers.push(r.tracker);
+  if (r.board && !S.tracker.board.find(b => b.id === r.board.id)) { S.tracker.board.push(r.board); toast('Added to the Status Board as a Current case'); }
+  else if (!quiet) toast('Saved');
+  if (!quiet) render(true);
+}
+function saveStep(caseId, k, change, quiet){
+  const t = trackerOf(caseId), st = Object.assign(stepOf(t, k), change);
+  if (change.done && !st.date) st.date = today();
+  run(async () => applyTrackerResult(await api('updateTracker', { case_id: caseId, steps: { [k]: st } }), quiet && !change.done));
+}
+function toggleAuthor(caseId, memberId, on){
+  const st = stepOf(trackerOf(caseId), 'authors'), ids = new Set(st.member_ids || []);
+  on ? ids.add(memberId) : ids.delete(memberId);
+  saveStep(caseId, 'authors', { member_ids: [...ids] });
+}
+function saveTrackerField(caseId, field, value){ run(async () => applyTrackerResult(await api('updateTracker', { case_id: caseId, [field]: value }), true)); }
+
+/* ============================================================
+   TAB 3 — STATUS BOARD
+   ============================================================ */
+function boardIndex(){
+  const B = S.board;
+  return { names: Object.fromEntries(B.members.map(m => [m.id, m.name])),
+    updates: id => B.updates.filter(u => u.board_id === id),
+    authorIds: id => B.authors.filter(a => a.board_id === id).map(a => a.member_id),
+    opinion: id => B.opinions.find(o => o.board_id === id) };
+}
+const canEditBoard = (ix, b) => isChair() || ix.authorIds(b.id).includes(S.me.id);
+function resClass(r){ r = (r||'').toLowerCase(); if (r.startsWith('unfav')) return 'unf'; if (r.startsWith('fav')) return 'fav'; if (r.startsWith('mixed')) return 'mix'; if (r.startsWith('issue')) return 'nr'; return 'tbd'; }
+const dash = '<span class="muted">—</span>';
+const clamp = txt => txt ? `<div class="clamp" onclick="this.classList.toggle('open')">${esc(txt)}</div>` : dash;
+
+function renderBoard(){
+  const B = S.board, ix = boardIndex(), cur = B.board.filter(b => !b.decided), dec = B.board.filter(b => b.decided);
+  const cols = isChair() ? 7 : 6;
+  return `<div class="bar"><h2>Status Board</h2><span class="hint">Click any long text to expand it.</span><div class="sp"></div>
+    ${isChair() ? `<button class="btn" onclick="boardModal()">+ Add case to board</button>` : ''}</div>
+  <div class="section-title">Current Cases <span class="count">${cur.length}</span></div>
+  <div class="tbl-wrap"><table><thead><tr><th>Case Name</th><th>Court #</th><th>Author(s)</th><th>Date Filed</th><th>Synopsis of Argument</th><th style="min-width:240px">Status</th>${isChair()?'<th></th>':''}</tr></thead><tbody>
+  ${cur.map(b => {
+    const ups = ix.updates(b.id), last = ups[ups.length-1], h = S.hist[b.id], ed = canEditBoard(ix, b);
+    const who = u => esc(u.author_label || ix.names[u.member_id] || '');
+    return `<tr><td><b>${esc(b.case_name)}</b></td><td class="w-court">${esc(b.court_no)||dash}</td><td class="w-auth">${esc(b.authors_text)||dash}</td>
+      <td class="w-date">${esc(b.date_filed)||dash}</td><td>${clamp(b.synopsis)}</td>
+      <td><div class="status-latest">${last?`<span class="d">${fmtDate(last.entry_date)}</span> ${esc(last.note)}`:'<span class="muted">No updates yet</span>'}</div>
+        <button class="link" onclick="S.hist['${b.id}']=!S.hist['${b.id}'];render(true)">${h?'Hide':'History'} (${ups.length})${ed?' · Add update':''}</button></td>
+      ${isChair()?`<td style="white-space:nowrap"><button class="btn sm" onclick="boardModal('${b.id}')">Edit</button> <button class="btn sm" onclick="decideModal('${b.id}')">Mark Decided</button></td>`:''}</tr>
+      ${h ? `<tr class="hist"><td colspan="${cols}"><ul>${[...ups].reverse().map(u => `<li><span class="d">${fmtDate(u.entry_date)} · ${who(u)}</span>${esc(u.note)}</li>`).join('') || '<li class="muted">No updates yet.</li>'}</ul>
+        ${ed ? `<div class="addc"><input type="text" id="su_${b.id}" placeholder="New status update…" onkeydown="if(event.key==='Enter')addStatus('${b.id}',this.nextElementSibling)"><button class="btn sm pri" onclick="addStatus('${b.id}',this)">Add</button></div>` : '<div class="hint" style="margin-top:6px">Only the Chair and the assigned author(s) can add updates.</div>'}</td></tr>` : ''}`;
+  }).join('') || `<tr><td colspan="${cols}" class="muted">No current cases.</td></tr>`}
+  </tbody></table></div>
+
+  <div class="section-title">Decided Cases <span class="count">${dec.length}</span></div>
+  <div class="tbl-wrap"><table><thead><tr><th>Case Name</th><th>Court #</th><th>Author(s)</th><th>Date Filed</th><th>Result</th><th>Synopsis of Argument</th><th>Outcome Analysis</th><th>Opinion</th>${isChair()?'<th></th>':''}</tr></thead><tbody>
+  ${dec.map(b => { const op = ix.opinion(b.id);
+    return `<tr><td><b>${esc(b.case_name)}</b>${b.decision_date||b.decision_cite?`<div class="cmeta">${b.decision_cite?esc(b.decision_cite):''}${b.decision_cite&&b.decision_date?' · ':''}${b.decision_date?'Decided '+fmtDate(b.decision_date):''}</div>`:''}</td>
+    <td class="w-court">${esc(b.court_no)||dash}</td><td class="w-auth">${esc(b.authors_text)||dash}</td><td class="w-date">${esc(b.date_filed)||dash}</td>
+    <td>${b.result?`<span class="res ${resClass(b.result)}">${esc(b.result)}</span>`:'<span class="res tbd">Details to be added</span>'}</td>
+    <td>${clamp(b.synopsis)}</td><td>${clamp(b.outcome_analysis)}</td>
+    <td style="white-space:nowrap">${op?`<span class="pdf">PDF</span> <button class="doclink" onclick="openDoc('${op.id}')">${esc(op.file_name)}</button>${isChair()?` <button class="link" style="color:var(--no)" onclick="removeDoc('${op.id}','${esc(op.file_name).replace(/'/g,'')}')">remove</button>`:''}`:
+      (isChair()?`<label class="btn sm">Upload<input type="file" accept="application/pdf,.pdf" hidden onchange="addDocs({board_id:'${b.id}'},this)"></label>`:dash)}</td>
+    ${isChair()?`<td><button class="btn sm" onclick="boardModal('${b.id}')">Edit</button></td>`:''}</tr>`; }).join('') || `<tr><td colspan="${isChair()?9:8}" class="muted">No decided cases yet.</td></tr>`}
+  </tbody></table></div>`;
+}
+
+function addStatus(boardId, btn){
+  const el = $('#su_' + boardId), note = el.value.trim(); if (!note) return;
+  run(async () => { await api('addStatusUpdate', { board_id: boardId, note }); el.value = ''; S.board = await api('getBoard'); render(true); toast('Status updated'); }, btn);
+}
+const BOARD_FIELDS = ['case_name','court_no','authors_text','date_filed','synopsis','result','decision_cite','decision_date','outcome_analysis'];
+async function boardModal(id){
+  const b = id ? S.board.board.find(x => x.id === id) : { decided: false };
+  if (!S.users) { try { S.users = await api('listUsers'); } catch(e){ return toast(e.message, true); } }
+  const authorIds = id ? boardIndex().authorIds(id) : [];
+  const accounts = S.users.users.filter(u => u.role !== 'viewer' && u.status !== 'pending');
+  const inp = (k, l, cls, t) => `<label class="f ${cls||''}">${l}<input type="${t||'text'}" id="bf_${k}" value="${esc(b[k]||'')}"></label>`;
+  const area = (k, l) => `<label class="f full">${l}<textarea id="bf_${k}" style="min-height:90px">${esc(b[k]||'')}</textarea></label>`;
+  openModal(`<h3>${id ? 'Edit Status Board entry' : 'Add case to Status Board'}</h3>
+    <div class="fgrid">
+      ${inp('case_name','Case name','full')}${inp('court_no','Court #')}${inp('date_filed','Date filed (e.g. 05/18/2026 or “Not specified”)')}
+      ${inp('authors_text','Author(s) as displayed','full')}
+      <div class="full"><div class="hint" style="margin-bottom:4px">Author accounts — these people can add status updates:</div>
+        <div class="authpick">${accounts.map(u => `<label><input type="checkbox" class="bf_auth" value="${u.id}" ${authorIds.includes(u.id)?'checked':''}> ${esc(u.name)}</label>`).join('')}</div></div>
+      ${area('synopsis','Synopsis of Argument')}
+      ${!id ? `<label class="f full"><input type="checkbox" id="bf_decided" onchange="document.getElementById('bf_dec_fields').style.display=this.checked?'contents':'none'"> Already decided</label>` : ''}
+      <div id="bf_dec_fields" style="display:${b.decided?'contents':'none'}">
+        <label class="f">Result<select id="bf_result"><option value=""></option>${RESULTS.map(r => `<option ${b.result===r?'selected':''}>${r}</option>`).join('')}${b.result && !RESULTS.includes(b.result) ? `<option selected>${esc(b.result)}</option>` : ''}</select></label>
+        ${inp('decision_date','Decision date','','date')}${inp('decision_cite','Decision citation','full')}${area('outcome_analysis','Outcome Analysis')}
+      </div>
+    </div>
+    <div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="saveBoard(${id?`'${id}'`:'null'},this)">Save</button></div>`);
+}
+function saveBoard(id, btn){
+  const p = {}; BOARD_FIELDS.forEach(k => { const el = document.getElementById('bf_' + k); if (el) p[k] = el.value; });
+  if (!p.case_name.trim()) return toast('Case name is required', true);
+  const authors = [...document.querySelectorAll('.bf_auth:checked')].map(x => x.value);
+  run(async () => {
+    let b;
+    if (id) b = (await api('updateBoard', { id, ...p })).board;
+    else b = (await api('createBoardEntry', { ...p, decided: !!($('#bf_decided') || {}).checked })).board;
+    await api('setBoardAuthors', { board_id: b.id, member_ids: authors });
+    closeModal(); S.board = await api('getBoard'); render(true); toast('Saved');
+  }, btn);
+}
+function decideModal(id){
+  const b = S.board.board.find(x => x.id === id);
+  openModal(`<h3>Mark as Decided</h3><div class="hint" style="margin-bottom:12px"><b>${esc(b.case_name)}</b> moves to Decided Cases. Existing columns carry over; add the rest below.</div>
+    <div class="fgrid">
+      <label class="f">Result<select id="dm_result">${RESULTS.map(r => `<option>${r}</option>`).join('')}</select></label>
+      <label class="f">Decision date<input type="date" id="dm_decision_date"></label>
+      <label class="f full">Decision citation<input type="text" id="dm_decision_cite" placeholder="2026 IL 131000"></label>
+      <label class="f full">Synopsis of Argument<textarea id="dm_synopsis">${esc(b.synopsis||'')}</textarea></label>
+      <label class="f full">Outcome Analysis<textarea id="dm_outcome_analysis" style="min-height:110px"></textarea></label>
+      <label class="f full">Opinion (PDF)<input type="file" id="dm_pdf" accept="application/pdf,.pdf"></label>
+    </div>
+    <div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="doDecide('${id}',this)">Move to Decided</button></div>`);
+}
+function doDecide(id, btn){
+  const p = {}; ['result','decision_date','decision_cite','synopsis','outcome_analysis'].forEach(k => p[k] = val('dm_' + k));
+  const file = ($('#dm_pdf').files || [])[0];
+  run(async () => {
+    await api('markDecided', { id, ...p });
+    closeModal();
+    if (file) await uploadMany({ board_id: id }, [file]);
+    S.board = await api('getBoard'); render(true); toast('Moved to Decided Cases');
+  }, btn);
+}
+
+/* ============================================================
+   USERS (Chair) + PASSWORD
+   ============================================================ */
+const roleSelect = (id, role, onch, disabled) => `<select style="width:auto" id="role_${id}" ${disabled?'disabled':''} ${onch?`onchange="${onch}"`:''}>
+  ${['chair','member','viewer'].map(r => `<option value="${r}" ${role===r?'selected':''}>${ROLE_LABEL[r]}</option>`).join('')}</select>`;
+function renderUsers(){
+  const U = S.users.users, pend = U.filter(u => u.status === 'pending'), rest = U.filter(u => u.status !== 'pending');
+  return `<div class="bar"><h2>Users</h2><span class="hint">🔒 Chair only</span><div class="sp"></div><button class="btn" onclick="go('review')">← Back</button></div>
+  <div class="infobox"><b>Roles:</b> <b>Chair</b> — everything. <b>Member</b> — Case Review (comment &amp; vote) and Status Board. <b>Viewer</b> — Status Board only, no voting (board members).</div>
+  ${pend.length ? `<div class="section-title">Pending approval <span class="count">${pend.length}</span></div>
+  <div class="hint" style="margin-bottom:8px">These people signed up from the link but were not on your list. Choose a role, then approve — or deny.</div>
+  <div class="tbl-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Signed up</th><th>Role</th><th></th></tr></thead><tbody>
+  ${pend.map(u => `<tr><td>${esc(u.name)}</td><td>${esc(u.email)}</td><td>${fmtStamp(u.created_at).split(' ')[0]}</td><td>${roleSelect(u.id, 'member')}</td>
+    <td style="white-space:nowrap"><button class="btn sm pri" onclick="approveUser('${u.id}',this)">Approve</button> <button class="btn sm danger" onclick="denyUser('${u.id}',this)">Deny</button></td></tr>`).join('')}
+  </tbody></table></div>` : ''}
+  <div class="section-title">Users <span class="count">${rest.length}</span></div>
+  <div class="tbl-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr></thead><tbody>
+  ${rest.map(u => { const self = u.id === S.me.id;
+    return `<tr><td>${esc(u.name)}</td><td>${esc(u.email)}</td><td>${roleSelect(u.id, u.role, `setRole('${u.id}',this)`, self)}</td><td>${STATUS_LABEL[u.status]||esc(u.status)}</td>
+    <td style="white-space:nowrap">${self ? '<span class="hint">You</span>' : `${u.has_login && u.status==='active' ? `<button class="btn sm" onclick="resetPw('${u.id}',this)">Reset password</button> ` : ''}
+      <button class="btn sm" onclick="setStatus('${u.id}','${u.status==='inactive'?'active':'inactive'}',this)">${u.status==='inactive'?'Reactivate':'Deactivate'}</button>`}</td></tr>`; }).join('')}
+  </tbody></table></div>
+  <div class="section-title">Add a user to the approved list</div>
+  <div class="card" style="padding:14px 16px"><div class="fgrid" style="grid-template-columns:1fr 1fr auto auto;align-items:end">
+    <label class="f">Name<input type="text" id="am_n"></label><label class="f">Email<input type="email" id="am_e"></label>
+    <label class="f">Role ${roleSelect('new', 'member')}</label>
+    <button class="btn pri" onclick="addUser(this)">Add</button></div>
+    <div class="hint" style="margin-top:8px">Then send them the app link. When they create an account with this email, they set a password and are in. Anyone not on the list lands in “Pending approval.”</div></div>`;
+}
+const reloadUsers = async () => { S.users = await api('listUsers'); render(true); };
+function approveUser(id, btn){ run(async () => { await api('approveUser', { id, role: val('role_' + id) }); await reloadUsers(); toast('Approved'); }, btn); }
+function denyUser(id, btn){ if (!confirm('Deny this request and remove the account?')) return; run(async () => { await api('denyUser', { id }); await reloadUsers(); }, btn); }
+function setRole(id, sel){ run(async () => { await api('setRole', { id, role: sel.value }); await reloadUsers(); toast('Role updated'); }, sel); }
+function setStatus(id, status, btn){ run(async () => { await api('setStatus', { id, status }); await reloadUsers(); }, btn); }
+function addUser(btn){
+  const name = val('am_n').trim(), email = val('am_e').trim(); if (!name || !email) return toast('Enter a name and email', true);
+  run(async () => { await api('addUser', { name, email, role: val('role_new') }); $('#am_n').value = ''; $('#am_e').value = ''; await reloadUsers(); toast(`${name} added — send them the app link`); }, btn);
+}
+function resetPw(id, btn){
+  const u = S.users.users.find(x => x.id === id);
+  if (!confirm(`Reset the password for ${u.name}? Their current password will stop working.`)) return;
+  run(async () => {
+    const r = await api('resetPassword', { id });
+    openModal(`<h3>Temporary password</h3><p>Send this to <b>${esc(u.name)}</b> (${esc(u.email)}). They can change it after signing in using the <b>Password</b> button.</p>
+      <div class="temp-pw">${esc(r.tempPassword)}</div><div class="mfoot"><button class="btn pri" onclick="closeModal()">Done</button></div>`);
+  }, btn);
+}
+function changePasswordModal(){
+  openModal(`<h3>Change your password</h3><div class="fgrid" style="grid-template-columns:1fr">
+    <label class="f">New password (at least 8 characters)<input type="password" id="cp1" autocomplete="new-password"></label>
+    <label class="f">Confirm new password<input type="password" id="cp2" autocomplete="new-password"></label></div>
+    <div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="doChangePw(this)">Save</button></div>`);
+}
+function doChangePw(btn){
+  if (val('cp1') !== val('cp2')) return toast('The passwords do not match', true);
+  if (val('cp1').length < 8) return toast('Use at least 8 characters', true);
+  run(async () => { await api('changePassword', { password: val('cp1') }); closeModal(); toast('Password changed'); }, btn);
+}
+
+/* ---------- Start ---------- */
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+boot();
+// keep the login fresh while the page stays open
+setInterval(() => { if (S.screen === 'app' && document.visibilityState === 'visible' && !document.getElementById('modal')) refreshSession(); }, 45 * 60 * 1000);
+</script>
+</body>
+</html>

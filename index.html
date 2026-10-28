@@ -179,13 +179,17 @@ label.f>input,label.f>select,label.f>textarea{margin-top:4px}
 <div id="root"><div class="loading">Loading…</div></div>
 <script>
 /* ============================================================
-   IDC Amicus Committee App — v1.0.0
-   Front end for the grasse-apps-proxy Worker (appId 'amicus').
+   IDC Amicus Committee App — v1.1.0 (Oct 28, 2026)
+   Front end for the amicus-proxy Worker (appId 'amicus').
+   v1.1.0: own Worker; Board Review stage (AI board report, board votes &
+   comments, board decision); case PDFs on the Status Board; Users: edit
+   name + On Board flag; sw.js.
    No keys in this file. Every permission is enforced by the Worker;
    hiding buttons here is only for convenience.
    ============================================================ */
-const APP_VERSION = '1.0.0';
-const WORKER_URL  = 'https://grasse-apps-proxy.ed-53c.workers.dev';
+const APP_VERSION = '1.1.0';
+const BUILD_DATE  = 'Oct 28, 2026';
+const WORKER_URL  = 'https://amicus-proxy.ed-53c.workers.dev';   // own Worker (was grasse-apps-proxy)
 const APP_ID      = 'amicus';
 const SESSION_KEY = 'amicus_session_v1';
 const MAX_PDF_BYTES = 25 * 1024 * 1024;
@@ -203,7 +207,7 @@ const STEPS = [
   {k:'filed',          n:'Brief filed', s:'Date flows to the Status Board'}
 ];
 const RESULTS = ['Favorable','Unfavorable / Anti-IDC','Mixed / Partially favorable','Issue not reached (favorable)'];
-const ROLE_LABEL = {chair:'Chair', member:'Member', viewer:'Viewer (Status Board only)'};
+const ROLE_LABEL = {chair:'Chair', member:'Member', viewer:'Viewer (Board Review & Status Board)'};
 const STATUS_LABEL = {active:'Active', invited:'Invited — no password yet', inactive:'Inactive', pending:'Pending'};
 
 /* ---------- State ---------- */
@@ -273,11 +277,11 @@ async function boot(){
 }
 function enterApp(){
   S.screen = 'app';
-  S.tab = isViewer() ? 'board' : 'review';
+  S.tab = isViewer() ? 'breview' : 'review';
   render(); loadTab();
 }
 function signOut(msg){
-  saveSession(null); S.me = null; S.review = S.board = S.tracker = S.users = null;
+  saveSession(null); S.me = null; S.review = S.board = S.tracker = S.users = S.breview = null;
   S.open = {}; S.showAll = {}; S.hist = {}; S.editing = null; closeModal();
   S.screen = 'login'; S.authMsg = msg || ''; render();
 }
@@ -310,6 +314,7 @@ async function loadTab(){
     if (t === 'board')   S.board   = await api('getBoard');
     if (t === 'tracker') S.tracker = await api('getTracker');
     if (t === 'users')   S.users   = await api('listUsers');
+    if (t === 'breview') S.breview = await api('getBoardReview');
     if (S.tab === t) render();
   });
 }
@@ -388,12 +393,14 @@ function renderShell(){
   const tabs = [
     ...(!isViewer() ? [['review','Case Review']] : []),
     ...(isChair() ? [['tracker','Chair Tracker <span class="lock">🔒</span>']] : []),
+    ['breview','Board Review'],
     ['board','Status Board']
   ];
   const pending = isChair() && S.users && S.users.users.some(u => u.status === 'pending');
   let body = '<div class="loading">Loading…</div>';
   if (S.tab === 'review' && S.review) body = renderReview();
   if (S.tab === 'tracker' && S.tracker) body = renderTracker();
+  if (S.tab === 'breview' && S.breview) body = renderBoardReview();
   if (S.tab === 'board' && S.board) body = renderBoard();
   if (S.tab === 'users' && S.users) body = renderUsers();
   return `
@@ -408,7 +415,7 @@ function renderShell(){
   </div></header>
   <nav><div class="tabs">${tabs.map(([k,l]) => `<button class="tab ${S.tab===k?'on':''}" onclick="go('${k}')">${l}</button>`).join('')}</div></nav>
   <main>${body}</main>
-  <footer>IDC Amicus Committee app v${APP_VERSION} · Questions or access problems? Contact the Committee Chair.</footer>`;
+  <footer>IDC Amicus Committee app v${APP_VERSION} · Build ${BUILD_DATE} · Questions or access problems? Contact the Committee Chair.</footer>`;
 }
 
 /* ============================================================
@@ -532,7 +539,7 @@ function saveComment(id, btn){ run(async () => { await api('editComment', { id, 
 function deleteComment(id, btn){ if (!confirm('Delete this comment?')) return; run(async () => { await api('deleteComment', { id }); await reloadReview(); toast('Comment deleted'); }, btn); }
 function addDocs(target, input){ const files = [...input.files]; input.value = ''; run(async () => { await uploadMany(target, files); await reloadAfterDocChange(); }); }
 function removeDoc(id, name){ if (!confirm(`Permanently delete ${name}?`)) return; run(async () => { await api('deleteDocument', { id }); await reloadAfterDocChange(); toast('Document deleted'); }); }
-async function reloadAfterDocChange(){ if (S.tab === 'review') await reloadReview(); else if (S.tab === 'tracker') { S.tracker = await api('getTracker'); render(true); } else if (S.tab === 'board') { S.board = await api('getBoard'); render(true); } }
+async function reloadAfterDocChange(){ if (S.tab === 'review') await reloadReview(); else if (S.tab === 'tracker') { S.tracker = await api('getTracker'); render(true); } else if (S.tab === 'board') { S.board = await api('getBoard'); render(true); } else if (S.tab === 'breview') { S.breview = await api('getBoardReview'); render(true); } }
 
 const CASE_FIELDS = ['case_name','court_no','app_cite','district','pla_granted','appellant','vote_deadline','issues','summary','requester_name','requester_firm','requester_contact','date_received','facts_notes'];
 function caseModal(id, typeOverride, carry){
@@ -588,7 +595,14 @@ function approveModal(id){
     <p>The case moves to your <b>Chair Tracker</b>, its documents are kept permanently, and the Archive records “Approved for amicus.” Voting and comments close.</p>
     <div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn gold" onclick="doApprove('${id}',this)">Approve</button></div>`);
 }
-function doApprove(id, btn){ run(async () => { await api('approveCase', { id }); closeModal(); await reloadReview(); toast('Moved to the Chair Tracker'); }, btn); }
+function doApprove(id, btn){
+  const name = (S.review.cases.find(x => x.id === id) || {}).case_name || '';
+  run(async () => {
+    await api('approveCase', { id }); closeModal(); await reloadReview();
+    toast('Moved to the Chair Tracker');
+    boardReportModal(id, name);                 // next step: report to the Board
+  }, btn);
+}
 function declineModal(id){
   const c = S.review.cases.find(x => x.id === id), ix = reviewIndex(), t = tallyOf(ix.votes[id]), docs = ix.docs[id] || [], n = (ix.comments[id] || []).length;
   openModal(`<h3>Decline &amp; Delete</h3>
@@ -626,9 +640,12 @@ function trackerCard(c){
     <div class="chead" onclick="S.open['t${c.id}']=!(S.open['t${c.id}']!==false);render(true)">
       <svg class="chev" viewBox="0 0 20 20" fill="currentColor"><path d="M7 4l6 6-6 6"/></svg>
       <div><div class="ctitle">${esc(c.case_name)}</div><div class="cmeta">${c.court_no?'No. '+esc(c.court_no)+' · ':''}Approved ${fmtStamp(c.approved_at).split(' ')[0]}${onBoard?' · <b>On Status Board</b>':''}</div></div>
-      <div class="cright">${dueBadge}<div class="progress"><span style="width:${done/STEPS.length*100}%"></span></div><span>${done} of ${STEPS.length} steps</span></div>
+      <div class="cright">${boardBadge(c)}${dueBadge}<div class="progress"><span style="width:${done/STEPS.length*100}%"></span></div><span>${done} of ${STEPS.length} steps</span></div>
     </div>
     ${open ? `<div style="padding:4px 16px 16px;border-top:1px solid var(--line)">
+      <div class="chairbar" style="border-top:none;padding-top:10px"><span class="lbl">Board:</span>
+        ${c.board_status === 'approved' ? '<span class="hint">The Board approved this case.</span>' : `<button class="btn sm gold" onclick="boardReportModal('${c.id}','${esc(c.case_name).replace(/'/g,'')}')">${reportOf(c.id) && reportOf(c.id).status === 'shared' ? 'Edit / re-share board report' : 'Board report'}</button>`}
+        ${c.board_status === 'pending' ? `<button class="btn sm" onclick="go('breview')">Open Board Review →</button>` : ''}</div>
       ${STEPS.map(s => stepRow(c, t, s)).join('')}
       <label class="f" style="margin-top:12px">General notes<textarea id="tg_${c.id}" onchange="saveTrackerField('${c.id}','general_notes',this.value)">${esc(t.general_notes||'')}</textarea></label>
       <div class="sec" style="margin-top:16px"><h4>Case documents (kept permanently)</h4>
@@ -688,6 +705,11 @@ function boardIndex(){
     opinion: id => B.opinions.find(o => o.board_id === id) };
 }
 const canEditBoard = (ix, b) => isChair() || ix.authorIds(b.id).includes(S.me.id);
+// Case PDFs that moved with an approved case onto the Status Board
+function caseDocLinks(b){
+  const docs = b.case_id ? (S.board.caseDocs || []).filter(d => d.case_id === b.case_id) : [];
+  return docs.length ? `<div style="margin-top:4px">${docs.map(d => `<div style="font-size:12.5px"><span class="pdf">PDF</span> <button class="doclink" style="font-size:12.5px" onclick="openDoc('${d.id}')">${esc(d.file_name)}</button></div>`).join('')}</div>` : '';
+}
 function resClass(r){ r = (r||'').toLowerCase(); if (r.startsWith('unfav')) return 'unf'; if (r.startsWith('fav')) return 'fav'; if (r.startsWith('mixed')) return 'mix'; if (r.startsWith('issue')) return 'nr'; return 'tbd'; }
 const dash = '<span class="muted">—</span>';
 const clamp = txt => txt ? `<div class="clamp" onclick="this.classList.toggle('open')">${esc(txt)}</div>` : dash;
@@ -702,7 +724,7 @@ function renderBoard(){
   ${cur.map(b => {
     const ups = ix.updates(b.id), last = ups[ups.length-1], h = S.hist[b.id], ed = canEditBoard(ix, b);
     const who = u => esc(u.author_label || ix.names[u.member_id] || '');
-    return `<tr><td><b>${esc(b.case_name)}</b></td><td class="w-court">${esc(b.court_no)||dash}</td><td class="w-auth">${esc(b.authors_text)||dash}</td>
+    return `<tr><td><b>${esc(b.case_name)}</b>${caseDocLinks(b)}</td><td class="w-court">${esc(b.court_no)||dash}</td><td class="w-auth">${esc(b.authors_text)||dash}</td>
       <td class="w-date">${esc(b.date_filed)||dash}</td><td>${clamp(b.synopsis)}</td>
       <td><div class="status-latest">${last?`<span class="d">${fmtDate(last.entry_date)}</span> ${esc(last.note)}`:'<span class="muted">No updates yet</span>'}</div>
         <button class="link" onclick="S.hist['${b.id}']=!S.hist['${b.id}'];render(true)">${h?'Hide':'History'} (${ups.length})${ed?' · Add update':''}</button></td>
@@ -715,7 +737,7 @@ function renderBoard(){
   <div class="section-title">Decided Cases <span class="count">${dec.length}</span></div>
   <div class="tbl-wrap"><table><thead><tr><th>Case Name</th><th>Court #</th><th>Author(s)</th><th>Date Filed</th><th>Result</th><th>Synopsis of Argument</th><th>Outcome Analysis</th><th>Opinion</th>${isChair()?'<th></th>':''}</tr></thead><tbody>
   ${dec.map(b => { const op = ix.opinion(b.id);
-    return `<tr><td><b>${esc(b.case_name)}</b>${b.decision_date||b.decision_cite?`<div class="cmeta">${b.decision_cite?esc(b.decision_cite):''}${b.decision_cite&&b.decision_date?' · ':''}${b.decision_date?'Decided '+fmtDate(b.decision_date):''}</div>`:''}</td>
+    return `<tr><td><b>${esc(b.case_name)}</b>${b.decision_date||b.decision_cite?`<div class="cmeta">${b.decision_cite?esc(b.decision_cite):''}${b.decision_cite&&b.decision_date?' · ':''}${b.decision_date?'Decided '+fmtDate(b.decision_date):''}</div>`:''}${caseDocLinks(b)}</td>
     <td class="w-court">${esc(b.court_no)||dash}</td><td class="w-auth">${esc(b.authors_text)||dash}</td><td class="w-date">${esc(b.date_filed)||dash}</td>
     <td>${b.result?`<span class="res ${resClass(b.result)}">${esc(b.result)}</span>`:'<span class="res tbd">Details to be added</span>'}</td>
     <td>${clamp(b.synopsis)}</td><td>${clamp(b.outcome_analysis)}</td>
@@ -789,6 +811,170 @@ function doDecide(id, btn){
 }
 
 /* ============================================================
+   BOARD REVIEW (v1.1.0)
+   Committee approves → Chair drafts/edits the report (Claude) → Share with Board
+   → Board reads report + PDFs, votes & comments here → Chair records the decision.
+   ============================================================ */
+const APP_LINK = () => location.origin + location.pathname;
+function reportOf(caseId){ return S.tracker && (S.tracker.reports || []).find(r => r.case_id === caseId); }
+function boardBadge(c){
+  if (c.board_status === 'approved') return '<span class="badge" style="background:var(--yes-bg);color:var(--yes)">Board approved</span>';
+  if (c.board_status === 'pending')  return '<span class="badge req">With the Board</span>';
+  const r = reportOf(c.id); return r ? '<span class="badge">Report draft saved</span>' : '<span class="badge">Board report not sent</span>';
+}
+
+function boardReportModal(caseId, name, presetText, presetTiming){
+  const r = reportOf(caseId) || (S.breview && (S.breview.reports || []).find(x => x.case_id === caseId)) || {};
+  const text = presetText !== undefined ? presetText : (r.report_text || '');
+  const timing = presetTiming !== undefined ? presetTiming : (r.timing_notes || '');
+  S.reportCaseName = name;                     // used for the email subject after sharing
+  openModal(`<h3>Report to the Board</h3><div class="hint" style="margin-bottom:10px"><b>${esc(name)}</b></div>
+    <label class="f">Timing / deadline notes for the Board (optional)<textarea id="br_timing" style="min-height:50px" placeholder="e.g. Appellant's brief due Dec. 1; amicus motion due 21 days later">${esc(timing)}</textarea></label>
+    <div class="hint" style="margin:6px 0 12px">The draft uses the case summary, the committee vote, all comments (without names), the brief due date and author(s) from your Tracker, and these notes.</div>
+    <button class="btn gold" onclick="draftReport('${caseId}',this)">${text ? '↻ Redraft with AI' : '✎ Draft with AI'}</button>
+    <label class="f" style="margin-top:12px">Report (edit freely — nothing goes to the Board until you click Share)<textarea id="br_text" style="min-height:300px">${esc(text)}</textarea></label>
+    <div class="mfoot"><button class="btn" onclick="closeModal()">Close</button>
+      <button class="btn" onclick="saveReport('${caseId}',false,this)">Save draft</button>
+      <button class="btn pri" onclick="saveReport('${caseId}',true,this)">Share with Board</button></div>`);
+}
+function draftReport(caseId, btn){
+  if (val('br_text').trim() && !confirm('Replace the current text with a new AI draft?')) return;
+  const old = btn.textContent; btn.textContent = 'Drafting… (about 15 seconds)';
+  run(async () => {
+    const r = await api('draftBoardReport', { case_id: caseId, timing_notes: val('br_timing') });
+    $('#br_text').value = r.draft; toast('Draft ready — please review and edit');
+  }, btn).finally(() => { if (document.body.contains(btn)) btn.textContent = '↻ Redraft with AI'; });
+}
+function saveReport(caseId, share, btn){
+  const text = val('br_text').trim(); if (!text) return toast('The report is empty — draft or type it first', true);
+  if (share && !confirm('Share this report with the Board? It will appear on the Board Review tab with the case documents.')) return;
+  run(async () => {
+    const r = await api('saveBoardReport', { case_id: caseId, report_text: text, timing_notes: val('br_timing'), share });
+    if (S.tracker) S.tracker = await api('getTracker');
+    if (!share) { toast('Draft saved'); render(true); return; }
+    closeModal(); render(true); sharedModal(caseId, text, r.recipients || []);
+  }, btn);
+}
+function sharedModal(caseId, text, recipients){
+  const name = S.reportCaseName || ((S.tracker && S.tracker.cases.find(c => c.id === caseId)) || {}).case_name || 'this case';
+  const subject = `IDC Amicus — Board review requested: ${name}`;
+  let bodyText = `The Amicus Committee recommends that IDC participate as amicus curiae in ${name}.\n\nThe committee's report and the case documents are in the IDC Amicus app under the "Board Review" tab, where Board members can vote and comment:\n${APP_LINK()}\n\n`;
+  bodyText += (bodyText.length + text.length < 1700) ? text : '(The full report is in the app.)';
+  const mailto = `mailto:?bcc=${encodeURIComponent(recipients.join(','))}&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(bodyText)}`;
+  window._sharedReport = text;
+  openModal(`<h3>Shared with the Board ✓</h3>
+    <p>The report and case documents are now on the <b>Board Review</b> tab, and “Report to Board” is checked in your Tracker.</p>
+    <p>Next, let the Board know (${recipients.length} Board member${recipients.length===1?'':'s'} will be BCC’d):</p>
+    <div class="mfoot" style="justify-content:flex-start">
+      <a class="btn pri" href="${esc(mailto)}" style="text-decoration:none">✉ Open email to the Board</a>
+      <button class="btn" onclick="copyReport()">Copy full report</button>
+      <button class="btn" onclick="navigator.clipboard&&navigator.clipboard.writeText(${esc(JSON.stringify(recipients.join('; ')))}).then(()=>toast('Board emails copied'))">Copy Board emails</button></div>
+    <div class="mfoot"><button class="btn" onclick="closeModal();go('breview')">Done — go to Board Review</button></div>`);
+}
+function copyReport(){ if (navigator.clipboard) navigator.clipboard.writeText(window._sharedReport || '').then(() => toast('Report copied')); }
+
+function renderBoardReview(){
+  const B = S.breview, pend = B.cases.filter(c => c.board_status === 'pending'), done = B.cases.filter(c => c.board_status === 'approved');
+  const intro = S.me.on_board ? 'Read the committee’s report and documents, then vote and comment.'
+    : (isChair() ? 'Board members vote and comment here. Record the Board’s decision when it is made (for example, after a board meeting).' : 'Board members vote and comment here.');
+  return `<div class="bar"><h2>Board Review</h2><span class="hint">${intro}</span></div>
+    ${pend.length ? pend.map(boardCard).join('') : '<div class="empty">No cases are waiting for the Board right now.</div>'}
+    ${done.length ? `<div class="section-title">Approved by the Board <span class="count">${done.length}</span></div>${done.map(boardCard).join('')}` : ''}`;
+}
+function boardCard(c){
+  const B = S.breview, rep = B.reports.find(r => r.case_id === c.id) || {}, pending = c.board_status === 'pending';
+  const votes = B.votes.filter(v => v.case_id === c.id), t = tallyOf(votes), mine = (votes.find(v => v.member_id === S.me.id) || {}).vote;
+  const comments = B.comments.filter(m => m.case_id === c.id), docs = B.documents.filter(d => d.case_id === c.id);
+  const key = 'b' + c.id, open = S.open[key], VL = {yes:'Yes', no:'No', abstain:'Abstain', recuse:'Recuse'};
+  const committee = `${rep.yes_count||0} Yes / ${rep.no_count||0} No${(rep.abstain_count||rep.recuse_count)?` (${rep.abstain_count||0} abst., ${rep.recuse_count||0} rec.)`:''}`;
+  return `<div class="card ${open?'open':''}">
+    <div class="chead" onclick="S.open['${key}']=!S.open['${key}'];render(true)">
+      <svg class="chev" viewBox="0 0 20 20" fill="currentColor"><path d="M7 4l6 6-6 6"/></svg>
+      <div><div class="ctitle">${esc(c.case_name)}</div>
+        <div class="cmeta">${pending ? '<span class="badge req">Awaiting Board decision</span>' : '<span class="badge" style="background:var(--yes-bg);color:var(--yes)">Board approved</span>'}
+          ${rep.shared_at ? ' · Sent to Board ' + fmtStamp(rep.shared_at).split(' ')[0] : ''} · Committee vote: ${committee}</div></div>
+      <div class="cright">
+        <div class="tally"><span class="pill">Board: ${t.total} vote${t.total===1?'':'s'}</span><span class="pill y">Yes ${t.yes}</span><span class="pill n">No ${t.no}</span>
+          ${t.abstain?`<span class="pill a">Abstain ${t.abstain}</span>`:''}${t.recuse?`<span class="pill r">Recuse ${t.recuse}</span>`:''}</div>
+        ${S.me.on_board ? `<span>Your vote: <span class="myvote">${mine ? VL[mine] : '—'}</span></span>` : ''}
+        <span>💬 ${comments.length}</span>
+      </div>
+    </div>
+    ${open ? boardBody(c, rep, votes, t, comments, docs, pending, mine) : ''}
+  </div>`;
+}
+function boardBody(c, rep, votes, t, comments, docs, pending, mine){
+  const B = S.breview, names = Object.fromEntries(B.members.map(m => [m.id, m.name]));
+  const boardMembers = B.members.filter(m => m.on_board && m.active);
+  const vm = Object.fromEntries(votes.map(v => [v.member_id, v.vote]));
+  const group = k => boardMembers.filter(m => vm[m.id] === k).map(m => esc(m.name)).join(', ') || '<span class="muted">—</span>';
+  const notVoted = boardMembers.filter(m => !vm[m.id]).map(m => esc(m.name)).join(', ') || '<span class="muted">Everyone has voted</span>';
+  const canVote = S.me.on_board && pending, canComment = (S.me.on_board || isChair()) && pending;
+  const vb = (k,l,cl) => `<button class="vb ${cl} ${mine===k?'on':''}" onclick="castBoardVote('${c.id}','${k}',this)">${l}</button>`;
+  const left = `<div class="sec"><h4>Committee report to the Board</h4><div class="summary">${esc(rep.report_text) || '<span class="muted">No report text.</span>'}</div></div>
+    <div class="sec"><h4>Documents</h4>${docs.length ? `<ul class="docs">${docs.map(d => `<li><span class="pdf">PDF</span><button class="doclink" onclick="openDoc('${d.id}')">${esc(d.file_name)}</button></li>`).join('')}</ul>` : '<div class="hint">No documents.</div>'}</div>`;
+  const voteHtml = `<div class="sec"><h4>Board vote — should IDC participate as amicus?</h4>
+    ${canVote ? `<div class="votebtns">${vb('yes','Yes','y')}${vb('no','No','n')}${vb('abstain','Abstain','a')}${vb('recuse','Recuse','r')}</div><div class="hint" style="margin-bottom:8px">You can change your vote until the Chair records the Board’s decision.</div>`
+      : `<div class="hint" style="margin-bottom:8px">${pending ? (S.me.on_board ? '' : 'Only Board members vote here.') : 'Board voting is closed.'}</div>`}
+    <div class="voters">
+      <div><span class="lbl" style="color:var(--yes)">Yes (${t.yes})</span>${group('yes')}</div>
+      <div><span class="lbl" style="color:var(--no)">No (${t.no})</span>${group('no')}</div>
+      <div><span class="lbl" style="color:var(--abs)">Abstain (${t.abstain})</span>${group('abstain')}</div>
+      <div><span class="lbl" style="color:var(--rec)">Recuse (${t.recuse})</span>${group('recuse')}</div>
+      ${pending ? `<div><span class="lbl muted">Not voted</span>${notVoted}</div>` : ''}
+    </div></div>`;
+  const key = 'b' + c.id, all = S.showAll[key], N = comments.length, shown = all ? comments : comments.slice(-3);
+  const row = m => {
+    const own = m.member_id === S.me.id, who = names[m.member_id] || 'Former member';
+    if (S.editing === m.id) return `<div class="comment"><div class="ch"><b>${esc(who)}</b></div><textarea id="bed_${m.id}">${esc(m.body)}</textarea>
+      <div style="display:flex;gap:6px;margin-top:6px"><button class="btn sm pri" onclick="saveBoardComment('${m.id}',this)">Save</button><button class="btn sm" onclick="S.editing=null;render(true)">Cancel</button></div></div>`;
+    return `<div class="comment"><div class="ch"><b>${esc(who)}</b><span class="when">${fmtStamp(m.created_at)}${m.edited_at ? ' · (edited)' : ''}</span>
+      <span class="acts">${own && pending ? `<button class="link" onclick="S.editing='${m.id}';render(true)">Edit</button>` : ''}
+      ${isChair() ? `<button class="link" style="color:var(--no)" onclick="deleteBoardComment('${m.id}',this)">Delete</button>` : ''}</span></div><div class="txt">${esc(m.body)}</div></div>`;
+  };
+  const commentHtml = `<div class="sec"><h4>Board comments (${N})</h4>
+    ${N > 3 ? `<button class="link" onclick="S.showAll['${key}']=${!all};render(true)">${all ? 'Show fewer' : `Show ${N-3} earlier comment${N-3===1?'':'s'}`}</button>` : ''}
+    ${shown.map(row).join('') || '<div class="hint">No comments yet.</div>'}
+    ${canComment ? `<div class="addc"><textarea id="bc_${c.id}" placeholder="Add a comment for the Board…"></textarea><button class="btn pri" onclick="addBoardComment('${c.id}',this)">Post</button></div>` : ''}</div>`;
+  const chair = isChair() && pending ? `<div class="chairbar"><span class="lbl">Chair — record the Board’s decision:</span>
+    <button class="btn sm gold" onclick="boardApproveModal('${c.id}')">✓ Board Approved</button>
+    <button class="btn sm danger" onclick="boardDeclineModal('${c.id}')">Board Declined</button>
+    <button class="btn sm" onclick="boardReportModal('${c.id}','${esc(c.case_name).replace(/'/g,'')}')">Edit report</button></div>` : '';
+  return `<div class="cbody"><div>${left}</div><div>${voteHtml}${commentHtml}</div>${chair}</div>`;
+}
+const reloadBoardReview = async () => { S.breview = await api('getBoardReview'); render(true); };
+function castBoardVote(caseId, vote, btn){ run(async () => { await api('castBoardVote', { case_id: caseId, vote }); await reloadBoardReview(); }, btn); }
+function addBoardComment(caseId, btn){
+  const el = $('#bc_' + caseId), body = el.value.trim(); if (!body) return;
+  run(async () => { await api('addBoardComment', { case_id: caseId, body }); el.value = ''; await reloadBoardReview(); }, btn);
+}
+function saveBoardComment(id, btn){ run(async () => { await api('editBoardComment', { id, body: val('bed_' + id) }); S.editing = null; await reloadBoardReview(); }, btn); }
+function deleteBoardComment(id, btn){ if (!confirm('Delete this comment?')) return; run(async () => { await api('deleteBoardComment', { id }); await reloadBoardReview(); toast('Comment deleted'); }, btn); }
+function boardApproveModal(caseId){
+  const c = S.breview.cases.find(x => x.id === caseId), t = tallyOf(S.breview.votes.filter(v => v.case_id === caseId));
+  openModal(`<h3>Record: Board Approved</h3><div class="infobox"><b>${esc(c.case_name)}</b><br>Board votes in the app: ${t.total} — ${t.yes} Yes, ${t.no} No, ${t.abstain} Abstain, ${t.recuse} Recuse.</div>
+    <p>The case moves to the <b>Status Board</b> as a Current case with its documents, “Board Approval” is checked in your Tracker, and Board voting closes.</p>
+    <div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn gold" onclick="doBoardDecision('${caseId}','approved',this)">Board Approved</button></div>`);
+}
+function boardDeclineModal(caseId){
+  const c = S.breview.cases.find(x => x.id === caseId), docs = S.breview.documents.filter(d => d.case_id === caseId);
+  openModal(`<h3>Record: Board Declined</h3>
+    <div class="warnbox"><b>This cannot be undone.</b> The case, its report, Board votes and comments, your Tracker entry and ${docs.length} document(s) will be permanently deleted.</div>
+    <p>The Archive keeps a record of <b>${esc(c.case_name)}</b> with outcome <b>Board declined</b>.</p>
+    <label class="f">Type DELETE to confirm<input type="text" id="bdel_ok" autocomplete="off"></label>
+    <div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn danger" onclick="doBoardDecision('${caseId}','declined',this)">Delete permanently</button></div>`);
+}
+function doBoardDecision(caseId, decision, btn){
+  const confirmText = decision === 'declined' ? val('bdel_ok').trim().toUpperCase() : '';
+  if (decision === 'declined' && confirmText !== 'DELETE') return toast('Type DELETE to confirm', true);
+  run(async () => {
+    await api('boardDecision', { case_id: caseId, decision, confirm: confirmText });
+    closeModal(); await reloadBoardReview();
+    toast(decision === 'approved' ? 'Board approval recorded — case added to the Status Board' : 'Recorded as Board declined; case and documents deleted');
+  }, btn);
+}
+
+/* ============================================================
    USERS (Chair) + PASSWORD
    ============================================================ */
 const roleSelect = (id, role, onch, disabled) => `<select style="width:auto" id="role_${id}" ${disabled?'disabled':''} ${onch?`onchange="${onch}"`:''}>
@@ -796,7 +982,7 @@ const roleSelect = (id, role, onch, disabled) => `<select style="width:auto" id=
 function renderUsers(){
   const U = S.users.users, pend = U.filter(u => u.status === 'pending'), rest = U.filter(u => u.status !== 'pending');
   return `<div class="bar"><h2>Users</h2><span class="hint">🔒 Chair only</span><div class="sp"></div><button class="btn" onclick="go('review')">← Back</button></div>
-  <div class="infobox"><b>Roles:</b> <b>Chair</b> — everything. <b>Member</b> — Case Review (comment &amp; vote) and Status Board. <b>Viewer</b> — Status Board only, no voting (board members).</div>
+  <div class="infobox"><b>Roles:</b> <b>Chair</b> — everything. <b>Member</b> — Case Review (comment &amp; vote), Board Review (read) and Status Board. <b>Viewer</b> — Board Review and Status Board only. <b>On Board</b> (checkbox, separate from role) — can vote and comment on the Board Review tab.</div>
   ${pend.length ? `<div class="section-title">Pending approval <span class="count">${pend.length}</span></div>
   <div class="hint" style="margin-bottom:8px">These people signed up from the link but were not on your list. Choose a role, then approve — or deny.</div>
   <div class="tbl-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Signed up</th><th>Role</th><th></th></tr></thead><tbody>
@@ -804,9 +990,10 @@ function renderUsers(){
     <td style="white-space:nowrap"><button class="btn sm pri" onclick="approveUser('${u.id}',this)">Approve</button> <button class="btn sm danger" onclick="denyUser('${u.id}',this)">Deny</button></td></tr>`).join('')}
   </tbody></table></div>` : ''}
   <div class="section-title">Users <span class="count">${rest.length}</span></div>
-  <div class="tbl-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr></thead><tbody>
+  <div class="tbl-wrap"><table><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>On Board</th><th>Status</th><th></th></tr></thead><tbody>
   ${rest.map(u => { const self = u.id === S.me.id;
-    return `<tr><td>${esc(u.name)}</td><td>${esc(u.email)}</td><td>${roleSelect(u.id, u.role, `setRole('${u.id}',this)`, self)}</td><td>${STATUS_LABEL[u.status]||esc(u.status)}</td>
+    return `<tr><td>${esc(u.name)} <button class="link" onclick="editNameModal('${u.id}')">edit</button></td><td>${esc(u.email)}</td><td>${roleSelect(u.id, u.role, `setRole('${u.id}',this)`, self)}</td>
+    <td style="text-align:center"><input type="checkbox" ${u.on_board?'checked':''} onchange="setOnBoard('${u.id}',this)" aria-label="On Board"></td><td>${STATUS_LABEL[u.status]||esc(u.status)}</td>
     <td style="white-space:nowrap">${self ? '<span class="hint">You</span>' : `${u.has_login && u.status==='active' ? `<button class="btn sm" onclick="resetPw('${u.id}',this)">Reset password</button> ` : ''}
       <button class="btn sm" onclick="setStatus('${u.id}','${u.status==='inactive'?'active':'inactive'}',this)">${u.status==='inactive'?'Reactivate':'Deactivate'}</button>`}</td></tr>`; }).join('')}
   </tbody></table></div>
@@ -822,6 +1009,17 @@ function approveUser(id, btn){ run(async () => { await api('approveUser', { id, 
 function denyUser(id, btn){ if (!confirm('Deny this request and remove the account?')) return; run(async () => { await api('denyUser', { id }); await reloadUsers(); }, btn); }
 function setRole(id, sel){ run(async () => { await api('setRole', { id, role: sel.value }); await reloadUsers(); toast('Role updated'); }, sel); }
 function setStatus(id, status, btn){ run(async () => { await api('setStatus', { id, status }); await reloadUsers(); }, btn); }
+function setOnBoard(id, box){ run(async () => { await api('updateUser', { id, on_board: box.checked }); await reloadUsers(); toast(box.checked ? 'Marked as a Board member' : 'Removed from the Board'); }, box); }
+function editNameModal(id){
+  const u = S.users.users.find(x => x.id === id);
+  openModal(`<h3>Edit name</h3><label class="f">Name<input type="text" id="en_name" value="${esc(u.name)}"></label>
+    <div class="hint" style="margin-top:6px">${esc(u.email)}</div>
+    <div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="saveName('${id}',this)">Save</button></div>`);
+}
+function saveName(id, btn){
+  const name = val('en_name').trim(); if (!name) return toast('Enter a name', true);
+  run(async () => { await api('updateUser', { id, name }); closeModal(); await reloadUsers(); toast('Name updated'); }, btn);
+}
 function addUser(btn){
   const name = val('am_n').trim(), email = val('am_e').trim(); if (!name || !email) return toast('Enter a name and email', true);
   run(async () => { await api('addUser', { name, email, role: val('role_new') }); $('#am_n').value = ''; $('#am_e').value = ''; await reloadUsers(); toast(`${name} added — send them the app link`); }, btn);
@@ -852,6 +1050,10 @@ document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal()
 boot();
 // keep the login fresh while the page stays open
 setInterval(() => { if (S.screen === 'app' && document.visibilityState === 'visible' && !document.getElementById('modal')) refreshSession(); }, 45 * 60 * 1000);
+// service worker (Handbook 5.3) — network-first for the page so updates show right away
+if ('serviceWorker' in navigator && location.protocol === 'https:') {
+  navigator.serviceWorker.register('sw.js').catch(() => {});
+}
 </script>
 </body>
 </html>

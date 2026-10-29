@@ -188,11 +188,17 @@ label.f>input,label.f>select,label.f>textarea{margin-top:4px}
    Status Board; "Synopsis to IDC Members" (AI, Sandra Wulf's required items);
    Users screen split into Committee / Board with sign-up counts and
    "Copy emails of those not signed up"; Synopsis access checkbox.
+   v1.3.0: Status Board "+ Add document" (IDC Amicus Brief / Opinion /
+   Motion for Leave / Other) for the Chair, synopsis users and the case's
+   authors; AI reads a brief → Synopsis of Argument, an opinion → outcome
+   fields + new Opinion Summary (reviewed before saving; only the Chair can
+   move a case to Decided); Date filed is a calendar date; quoting fix for
+   names in buttons.
    No keys in this file. Every permission is enforced by the Worker;
    hiding buttons here is only for convenience.
    ============================================================ */
-const APP_VERSION = '1.2.0';
-const BUILD_DATE  = 'Oct 28, 2026';
+const APP_VERSION = '1.3.0';
+const BUILD_DATE  = 'Oct 29, 2026';
 // Court choices (the field also accepts typed text for anything else)
 const COURTS = ['Illinois Supreme Court', 'Illinois Appellate Court', 'U.S. Supreme Court',
   'U.S. Court of Appeals for the Seventh Circuit'];
@@ -338,7 +344,7 @@ async function uploadPdf(target, file){         // target = {case_id} or {board_
   const link = await api('getUploadLink', { ...target, file_name: file.name, content_type: 'application/pdf', file_size: file.size });
   const put = await fetch(link.uploadUrl, { method:'PUT', headers:{ 'Content-Type':'application/pdf' }, body: file });
   if (!put.ok) throw new Error(`Upload of ${file.name} failed (${put.status}).`);
-  await api('recordDocument', { ...target, storage_path: link.storage_path, file_name: file.name, file_size: file.size });
+  return (await api('recordDocument', { ...target, storage_path: link.storage_path, file_name: file.name, file_size: file.size })).document;
 }
 async function uploadMany(target, files){
   const list = [...(files || [])]; let ok = 0;
@@ -483,7 +489,7 @@ function caseBody(c, votes, t, comments, ix){
   const docs = ix.docs[c.id] || [];
   const docHtml = `<div class="sec"><h4>Documents</h4>
     ${docs.length ? `<ul class="docs">${docs.map(d => `<li><span class="pdf">PDF</span><button class="doclink" onclick="openDoc('${d.id}')">${esc(d.file_name)}</button>
-      ${isChair() ? `<button class="link x" style="color:var(--no)" onclick="removeDoc('${d.id}','${esc(d.file_name).replace(/'/g,'')}')">remove</button>` : ''}</li>`).join('')}</ul>` : '<div class="hint">No documents uploaded.</div>'}
+      ${isChair() ? `<button class="link x" style="color:var(--no)" data-n="${esc(d.file_name)}" onclick="removeDoc('${d.id}',this.dataset.n)">remove</button>` : ''}</li>`).join('')}</ul>` : '<div class="hint">No documents uploaded.</div>'}
     ${isChair() ? `<label class="btn sm" style="display:inline-block;margin-top:8px">+ Add PDF<input type="file" accept="application/pdf,.pdf" multiple hidden onchange="addDocs({case_id:'${c.id}'},this)"></label>` : ''}</div>`;
 
   const lk = lockedCase(c), mine = (votes.find(v => v.member_id === S.me.id) || {}).vote;
@@ -655,12 +661,12 @@ function trackerCard(c){
     </div>
     ${open ? `<div style="padding:4px 16px 16px;border-top:1px solid var(--line)">
       <div class="chairbar" style="border-top:none;padding-top:10px"><span class="lbl">Board:</span>
-        ${c.board_status === 'approved' ? '<span class="hint">The Board approved this case.</span>' : `<button class="btn sm gold" onclick="boardReportModal('${c.id}','${esc(c.case_name).replace(/'/g,'')}')">${reportOf(c.id) && reportOf(c.id).status === 'shared' ? 'Edit / re-share board report' : 'Board report'}</button>`}
+        ${c.board_status === 'approved' ? '<span class="hint">The Board approved this case.</span>' : `<button class="btn sm gold" data-n="${esc(c.case_name)}" onclick="boardReportModal('${c.id}',this.dataset.n)">${reportOf(c.id) && reportOf(c.id).status === 'shared' ? 'Edit / re-share board report' : 'Board report'}</button>`}
         ${c.board_status === 'pending' ? `<button class="btn sm" onclick="go('breview')">Open Board Review →</button>` : ''}</div>
       ${STEPS.map(s => stepRow(c, t, s)).join('')}
       <label class="f" style="margin-top:12px">General notes<textarea id="tg_${c.id}" onchange="saveTrackerField('${c.id}','general_notes',this.value)">${esc(t.general_notes||'')}</textarea></label>
       <div class="sec" style="margin-top:16px"><h4>Case documents (kept permanently)</h4>
-        ${docs.length ? `<ul class="docs">${docs.map(d => `<li><span class="pdf">PDF</span><button class="doclink" onclick="openDoc('${d.id}')">${esc(d.file_name)}</button><button class="link x" style="color:var(--no)" onclick="removeDoc('${d.id}','${esc(d.file_name).replace(/'/g,'')}')">remove</button></li>`).join('')}</ul>` : '<div class="hint">No documents.</div>'}
+        ${docs.length ? `<ul class="docs">${docs.map(d => `<li><span class="pdf">PDF</span><button class="doclink" onclick="openDoc('${d.id}')">${esc(d.file_name)}</button><button class="link x" style="color:var(--no)" data-n="${esc(d.file_name)}" onclick="removeDoc('${d.id}',this.dataset.n)">remove</button></li>`).join('')}</ul>` : '<div class="hint">No documents.</div>'}
         <label class="btn sm" style="display:inline-block;margin-top:8px">+ Add PDF<input type="file" accept="application/pdf,.pdf" multiple hidden onchange="addDocs({case_id:'${c.id}'},this)"></label>
       </div></div>` : ''}
   </div>`;
@@ -716,12 +722,24 @@ function boardIndex(){
     opinion: id => B.opinions.find(o => o.board_id === id) };
 }
 const canEditBoard = (ix, b) => isChair() || ix.authorIds(b.id).includes(S.me.id);
-// Case PDFs that moved with an approved case onto the Status Board
+// v1.3.0: who can add documents to a Status Board entry (the Worker enforces the same rule)
+const canAddDocs = (ix, b) => canSynopsis() || ix.authorIds(b.id).includes(S.me.id);
+const DOC_TYPES = [
+  {k:'brief',   n:'IDC Amicus Brief'},
+  {k:'opinion', n:'Opinion'},
+  {k:'motion',  n:'Motion for Leave to File Amicus Brief'},
+  {k:'other',   n:'Other'}
+];
+const DOC_BADGE = {brief:'IDC brief', opinion:'Opinion', motion:'Motion for leave'};
+const boardDocsOf = id => (S.board.boardDocs || [...(S.board.briefs || []), ...(S.board.opinions || [])]).filter(d => d.board_id === id);
+const docRow = (d, label) => `<div style="font-size:12.5px"><span class="pdf">PDF</span> ${label ? `<span class="badge" style="font-size:10.5px;padding:1px 6px">${esc(label)}</span> ` : ''}<button class="doclink" style="font-size:12.5px" onclick="openDoc('${d.id}')">${esc(d.file_name)}</button>${isChair() && d.board_id ? ` <button class="link" style="color:var(--no);font-size:12px" data-n="${esc(d.file_name)}" onclick="removeDoc('${d.id}',this.dataset.n)">remove</button>` : ''}</div>`;
+const filedText = b => b.filed_on ? fmtDate(b.filed_on) : esc(b.date_filed);
+// Documents under the case name: Status Board documents (labeled) + case PDFs that moved with an approved case.
+// On Decided cases, opinions are listed in their own Opinion column instead.
 function caseDocLinks(b){
   const docs = b.case_id ? (S.board.caseDocs || []).filter(d => d.case_id === b.case_id) : [];
-  const briefs = (S.board.briefs || []).filter(d => d.board_id === b.id);
-  const row = (d, label) => `<div style="font-size:12.5px"><span class="pdf">PDF</span> ${label ? `<span class="badge" style="font-size:10.5px;padding:1px 6px">${label}</span> ` : ''}<button class="doclink" style="font-size:12.5px" onclick="openDoc('${d.id}')">${esc(d.file_name)}</button>${isChair() && label ? ` <button class="link" style="color:var(--no);font-size:12px" onclick="removeDoc('${d.id}','${esc(d.file_name).replace(/'/g,'')}')">remove</button>` : ''}</div>`;
-  const all = [...briefs.map(d => row(d, 'IDC brief')), ...docs.map(d => row(d, ''))];
+  const own = boardDocsOf(b.id).filter(d => !(b.decided && d.doc_kind === 'opinion'));
+  const all = [...own.map(d => docRow(d, d.doc_kind === 'other' ? (d.doc_label || 'Other') : DOC_BADGE[d.doc_kind])), ...docs.map(d => docRow(d, ''))];
   return all.length ? `<div style="margin-top:4px">${all.join('')}</div>` : '';
 }
 function resClass(r){ r = (r||'').toLowerCase(); if (r.startsWith('unfav')) return 'unf'; if (r.startsWith('fav')) return 'fav'; if (r.startsWith('mixed')) return 'mix'; if (r.startsWith('issue')) return 'nr'; return 'tbd'; }
@@ -730,9 +748,10 @@ const clamp = txt => txt ? `<div class="clamp" onclick="this.classList.toggle('o
 
 function renderBoard(){
   const B = S.board, ix = boardIndex(), cur = B.board.filter(b => !b.decided), dec = B.board.filter(b => b.decided);
-  const acts = isChair() || canSynopsis();               // show the actions column
+  const acts = isChair() || canSynopsis() || B.board.some(b => canAddDocs(ix, b));   // show the actions column
   const cols = acts ? 8 : 7;
   const synBtn = b => canSynopsis() ? `<button class="btn sm gold" onclick="synopsisModal('${b.id}')">Synopsis to IDC Members</button>` : '';
+  const addBtn = b => canAddDocs(ix, b) ? `<button class="btn sm" onclick="addDocModal('${b.id}')">+ Add document</button>` : '';
   return `<div class="bar"><h2>Status Board</h2><span class="hint">Click any long text to expand it.</span><div class="sp"></div>
     ${isChair() ? `<button class="btn" onclick="boardModal()">+ Add case to board</button>` : ''}</div>
   <div class="section-title">Current Cases <span class="count">${cur.length}</span></div>
@@ -741,25 +760,24 @@ function renderBoard(){
     const ups = ix.updates(b.id), last = ups[ups.length-1], h = S.hist[b.id], ed = canEditBoard(ix, b);
     const who = u => esc(u.author_label || ix.names[u.member_id] || '');
     return `<tr><td><b>${esc(b.case_name)}</b>${caseDocLinks(b)}</td><td class="w-court">${esc(b.court)||dash}</td><td class="w-court">${esc(b.court_no)||dash}</td><td class="w-auth">${esc(b.authors_text)||dash}</td>
-      <td class="w-date">${esc(b.date_filed)||dash}</td><td>${clamp(b.synopsis)}</td>
+      <td class="w-date">${filedText(b)||dash}</td><td>${clamp(b.synopsis)}</td>
       <td><div class="status-latest">${last?`<span class="d">${fmtDate(last.entry_date)}</span> ${esc(last.note)}`:'<span class="muted">No updates yet</span>'}</div>
         <button class="link" onclick="S.hist['${b.id}']=!S.hist['${b.id}'];render(true)">${h?'Hide':'History'} (${ups.length})${ed?' · Add update':''}</button></td>
-      ${acts?`<td><div style="display:flex;flex-direction:column;gap:6px;align-items:stretch">${isChair()?`<button class="btn sm" onclick="boardModal('${b.id}')">Edit</button><button class="btn sm" onclick="decideModal('${b.id}')">Mark Decided</button>`:''}${synBtn(b)}</div></td>`:''}</tr>
+      ${acts?`<td><div style="display:flex;flex-direction:column;gap:6px;align-items:stretch">${isChair()?`<button class="btn sm" onclick="boardModal('${b.id}')">Edit</button><button class="btn sm" onclick="decideModal('${b.id}')">Mark Decided</button>`:''}${addBtn(b)}${synBtn(b)}</div></td>`:''}</tr>
       ${h ? `<tr class="hist"><td colspan="${cols}"><ul>${[...ups].reverse().map(u => `<li><span class="d">${fmtDate(u.entry_date)} · ${who(u)}</span>${esc(u.note)}</li>`).join('') || '<li class="muted">No updates yet.</li>'}</ul>
         ${ed ? `<div class="addc"><input type="text" id="su_${b.id}" placeholder="New status update…" onkeydown="if(event.key==='Enter')addStatus('${b.id}',this.nextElementSibling)"><button class="btn sm pri" onclick="addStatus('${b.id}',this)">Add</button></div>` : '<div class="hint" style="margin-top:6px">Only the Chair and the assigned author(s) can add updates.</div>'}</td></tr>` : ''}`;
   }).join('') || `<tr><td colspan="${cols}" class="muted">No current cases.</td></tr>`}
   </tbody></table></div>
 
   <div class="section-title">Decided Cases <span class="count">${dec.length}</span></div>
-  <div class="tbl-wrap"><table><thead><tr><th>Case Name</th><th>Court</th><th>Case No.</th><th>Author(s)</th><th>Date Filed</th><th>Result</th><th>Synopsis of Argument</th><th>Outcome Analysis</th><th>Opinion</th>${acts?'<th></th>':''}</tr></thead><tbody>
-  ${dec.map(b => { const op = ix.opinion(b.id);
+  <div class="tbl-wrap"><table><thead><tr><th>Case Name</th><th>Court</th><th>Case No.</th><th>Author(s)</th><th>Date Filed</th><th>Result</th><th>Synopsis of Argument</th><th>Opinion Summary</th><th>Outcome Analysis</th><th>Opinion</th>${acts?'<th></th>':''}</tr></thead><tbody>
+  ${dec.map(b => { const ops = boardDocsOf(b.id).filter(d => d.doc_kind === 'opinion');
     return `<tr><td><b>${esc(b.case_name)}</b>${b.decision_date||b.decision_cite?`<div class="cmeta">${b.decision_cite?esc(b.decision_cite):''}${b.decision_cite&&b.decision_date?' · ':''}${b.decision_date?'Decided '+fmtDate(b.decision_date):''}</div>`:''}${caseDocLinks(b)}</td>
-    <td class="w-court">${esc(b.court)||dash}</td><td class="w-court">${esc(b.court_no)||dash}</td><td class="w-auth">${esc(b.authors_text)||dash}</td><td class="w-date">${esc(b.date_filed)||dash}</td>
+    <td class="w-court">${esc(b.court)||dash}</td><td class="w-court">${esc(b.court_no)||dash}</td><td class="w-auth">${esc(b.authors_text)||dash}</td><td class="w-date">${filedText(b)||dash}</td>
     <td>${b.result?`<span class="res ${resClass(b.result)}">${esc(b.result)}</span>`:'<span class="res tbd">Details to be added</span>'}</td>
-    <td>${clamp(b.synopsis)}</td><td>${clamp(b.outcome_analysis)}</td>
-    <td style="white-space:nowrap">${op?`<span class="pdf">PDF</span> <button class="doclink" onclick="openDoc('${op.id}')">${esc(op.file_name)}</button>${isChair()?` <button class="link" style="color:var(--no)" onclick="removeDoc('${op.id}','${esc(op.file_name).replace(/'/g,'')}')">remove</button>`:''}`:
-      (isChair()?`<label class="btn sm">Upload<input type="file" accept="application/pdf,.pdf" hidden onchange="addDocs({board_id:'${b.id}'},this)"></label>`:dash)}</td>
-    ${acts?`<td><div style="display:flex;flex-direction:column;gap:6px;align-items:stretch">${isChair()?`<button class="btn sm" onclick="boardModal('${b.id}')">Edit</button>`:''}${synBtn(b)}</div></td>`:''}</tr>`; }).join('') || `<tr><td colspan="${acts?10:9}" class="muted">No decided cases yet.</td></tr>`}
+    <td>${clamp(b.synopsis)}</td><td>${clamp(b.opinion_summary)}</td><td>${clamp(b.outcome_analysis)}</td>
+    <td style="white-space:nowrap">${ops.length ? ops.map(op => docRow(op, '')).join('') : dash}</td>
+    ${acts?`<td><div style="display:flex;flex-direction:column;gap:6px;align-items:stretch">${isChair()?`<button class="btn sm" onclick="boardModal('${b.id}')">Edit</button>`:''}${addBtn(b)}${synBtn(b)}</div></td>`:''}</tr>`; }).join('') || `<tr><td colspan="${acts?11:10}" class="muted">No decided cases yet.</td></tr>`}
   </tbody></table></div>`;
 }
 
@@ -767,7 +785,7 @@ function addStatus(boardId, btn){
   const el = $('#su_' + boardId), note = el.value.trim(); if (!note) return;
   run(async () => { await api('addStatusUpdate', { board_id: boardId, note }); el.value = ''; S.board = await api('getBoard'); render(true); toast('Status updated'); }, btn);
 }
-const BOARD_FIELDS = ['case_name','court','court_no','authors_text','date_filed','synopsis','result','decision_cite','decision_date','outcome_analysis'];
+const BOARD_FIELDS = ['case_name','court','court_no','authors_text','filed_on','synopsis','result','decision_cite','decision_date','opinion_summary','outcome_analysis'];
 async function boardModal(id){
   const b = id ? S.board.board.find(x => x.id === id) : { decided: false };
   if (!S.users) { try { S.users = await api('listUsers'); } catch(e){ return toast(e.message, true); } }
@@ -777,7 +795,7 @@ async function boardModal(id){
   const area = (k, l) => `<label class="f full">${l}<textarea id="bf_${k}" style="min-height:90px">${esc(b[k]||'')}</textarea></label>`;
   openModal(`<h3>${id ? 'Edit Status Board entry' : 'Add case to Status Board'}</h3>
     <div class="fgrid">
-      ${inp('case_name','Case name','full')}<label class="f">Court${courtInput('bf_court', b.court)}</label>${inp('court_no','Case No.')}${inp('date_filed','Date filed (e.g. 05/18/2026 or “Not specified”)')}
+      ${inp('case_name','Case name','full')}<label class="f">Court${courtInput('bf_court', b.court)}</label>${inp('court_no','Case No.')}<label class="f">Date filed<input type="date" id="bf_filed_on" value="${esc(b.filed_on||'')}">${!b.filed_on && b.date_filed ? `<span class="hint">Previously noted: ${esc(b.date_filed)}</span>` : ''}</label>
       ${inp('authors_text','Author(s) as displayed','full')}
       <div class="full"><div class="hint" style="margin-bottom:4px">Author accounts — these people can add status updates:</div>
         <div class="authpick">${accounts.map(u => `<label><input type="checkbox" class="bf_auth" value="${u.id}" ${authorIds.includes(u.id)?'checked':''}> ${esc(u.name)}</label>`).join('')}</div></div>
@@ -785,7 +803,7 @@ async function boardModal(id){
       ${!id ? `<label class="f full"><input type="checkbox" id="bf_decided" onchange="document.getElementById('bf_dec_fields').style.display=this.checked?'contents':'none'"> Already decided</label>` : ''}
       <div id="bf_dec_fields" style="display:${b.decided?'contents':'none'}">
         <label class="f">Result<select id="bf_result"><option value=""></option>${RESULTS.map(r => `<option ${b.result===r?'selected':''}>${r}</option>`).join('')}${b.result && !RESULTS.includes(b.result) ? `<option selected>${esc(b.result)}</option>` : ''}</select></label>
-        ${inp('decision_date','Decision date','','date')}${inp('decision_cite','Decision citation','full')}${area('outcome_analysis','Outcome Analysis')}
+        ${inp('decision_date','Decision date','','date')}${inp('decision_cite','Decision citation','full')}${area('opinion_summary','Opinion Summary')}${area('outcome_analysis','Outcome Analysis')}
       </div>
     </div>
     <div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="saveBoard(${id?`'${id}'`:'null'},this)">Save</button></div>`);
@@ -810,19 +828,98 @@ function decideModal(id){
       <label class="f">Decision date<input type="date" id="dm_decision_date"></label>
       <label class="f full">Decision citation<input type="text" id="dm_decision_cite" placeholder="2026 IL 131000"></label>
       <label class="f full">Synopsis of Argument<textarea id="dm_synopsis">${esc(b.synopsis||'')}</textarea></label>
-      <label class="f full">Outcome Analysis<textarea id="dm_outcome_analysis" style="min-height:110px"></textarea></label>
+      <label class="f full">Opinion Summary<textarea id="dm_opinion_summary" style="min-height:90px">${esc(b.opinion_summary||'')}</textarea></label>
+      <label class="f full">Outcome Analysis<textarea id="dm_outcome_analysis" style="min-height:110px">${esc(b.outcome_analysis||'')}</textarea></label>
       <label class="f full">Opinion (PDF)<input type="file" id="dm_pdf" accept="application/pdf,.pdf"></label>
     </div>
     <div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="doDecide('${id}',this)">Move to Decided</button></div>`);
 }
 function doDecide(id, btn){
-  const p = {}; ['result','decision_date','decision_cite','synopsis','outcome_analysis'].forEach(k => p[k] = val('dm_' + k));
+  const p = {}; ['result','decision_date','decision_cite','synopsis','opinion_summary','outcome_analysis'].forEach(k => p[k] = val('dm_' + k));
   const file = ($('#dm_pdf').files || [])[0];
   run(async () => {
     await api('markDecided', { id, ...p });
     closeModal();
-    if (file) await uploadMany({ board_id: id }, [file]);
+    if (file) await uploadMany({ board_id: id, doc_kind: 'opinion' }, [file]);
     S.board = await api('getBoard'); render(true); toast('Moved to Decided Cases');
+  }, btn);
+}
+
+/* ---- v1.3.0: Add document (Chair, synopsis users, the case's authors) ---- */
+function addDocModal(boardId){
+  const b = S.board.board.find(x => x.id === boardId);
+  openModal(`<h3>Add document</h3><div class="hint" style="margin-bottom:12px"><b>${esc(b.case_name)}</b></div>
+    <div class="fgrid">
+      <label class="f full">Type of document<select id="ad_kind" onchange="adKindChanged(this.value)">
+        <option value="">Choose…</option>${DOC_TYPES.map(t => `<option value="${t.k}">${t.n}</option>`).join('')}</select></label>
+      <label class="f full" id="ad_other" style="display:none">What is this document?<input type="text" id="ad_label" maxlength="200" placeholder="e.g. Appellee's brief, Order granting leave"></label>
+      <label class="f full">PDF file (25 MB max)<input type="file" id="ad_file" accept="application/pdf,.pdf"></label>
+      <div class="full hint" id="ad_ai" style="display:none">After the upload, the AI reads the PDF and suggests text for the Status Board. You review and edit it before anything is saved.</div>
+    </div>
+    <div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" id="ad_go" onclick="doAddDoc('${boardId}',this)">Upload</button></div>`);
+}
+function adKindChanged(k){
+  $('#ad_other').style.display = k === 'other' ? '' : 'none';
+  $('#ad_ai').style.display = (k === 'brief' || k === 'opinion') ? '' : 'none';
+  if (k === 'other') $('#ad_label').focus();
+}
+function doAddDoc(boardId, btn){
+  const kind = val('ad_kind'), label = val('ad_label').trim(), file = ($('#ad_file').files || [])[0];
+  if (!kind) return toast('Choose the type of document', true);
+  if (kind === 'other' && !label) return toast('Please describe what this document is', true);
+  if (!file) return toast('Choose a PDF file', true);
+  btn.textContent = 'Uploading…';
+  run(async () => {
+    const doc = await uploadPdf({ board_id: boardId, doc_kind: kind, doc_label: kind === 'other' ? label : undefined }, file);
+    S.board = await api('getBoard'); render(true);
+    if (kind !== 'brief' && kind !== 'opinion') { closeModal(); return toast('Document added'); }
+    btn.textContent = 'AI is reading the PDF… (up to a minute)';
+    let r;
+    try { r = await api('analyzeDocument', { document_id: doc.id }); }
+    catch (e) { r = { kind, fields: {}, error: e.message }; }
+    reviewDocModal(boardId, kind, r.fields || {}, r.error);
+  }, btn).finally(() => { if (document.body.contains(btn)) btn.textContent = 'Upload'; });
+}
+// Review the AI's suggestions. Nothing is saved until Save is clicked.
+function reviewDocModal(boardId, kind, f, err){
+  const b = S.board.board.find(x => x.id === boardId);
+  const pick = k => (f[k] !== undefined && f[k] !== '') ? f[k] : (b[k] || '');
+  const warn = err ? `<div class="hint" style="color:var(--no);margin-bottom:10px">The document was saved, but the AI could not suggest text: ${esc(err)}</div>` : '';
+  const area = (k, l, h) => `<label class="f full">${l}<textarea id="rv_${k}" style="min-height:${h||120}px">${esc(pick(k))}</textarea></label>`;
+  if (kind === 'brief') {
+    const cur = b.synopsis && f.synopsis && b.synopsis !== f.synopsis
+      ? `<div class="full"><div class="hint">Current Synopsis of Argument on the board:</div><div class="clamp" onclick="this.classList.toggle('open')">${esc(b.synopsis)}</div>
+         <button class="link" onclick="$('#rv_synopsis').value=S.board.board.find(x=>x.id==='${boardId}').synopsis">Keep the current text instead</button></div>` : '';
+    openModal(`<h3>Review: IDC Amicus Brief</h3><div class="hint" style="margin-bottom:10px"><b>${esc(b.case_name)}</b> — ${err ? '' : 'AI suggestion. '}Edit freely, then Save.</div>${warn}
+      <div class="fgrid">${cur}
+        ${area('synopsis', 'Synopsis of Argument', 200)}
+        <label class="f">Date filed<input type="date" id="rv_filed_on" value="${esc(pick('filed_on'))}"></label>
+      </div>
+      <div class="mfoot"><button class="btn" onclick="closeModal()">Skip</button><button class="btn pri" onclick="saveDocFields('${boardId}','brief',false,this)">Save</button></div>`);
+    return;
+  }
+  const res = pick('result');
+  openModal(`<h3>Review: Opinion</h3><div class="hint" style="margin-bottom:10px"><b>${esc(b.case_name)}</b> — ${err ? '' : 'AI suggestion. '}Edit freely, then Save.</div>${warn}
+    <div class="fgrid">
+      <label class="f">Result<select id="rv_result"><option value=""></option>${RESULTS.map(r => `<option ${res===r?'selected':''}>${r}</option>`).join('')}${res && !RESULTS.includes(res) ? `<option selected>${esc(res)}</option>` : ''}</select></label>
+      <label class="f">Decision date<input type="date" id="rv_decision_date" value="${esc(pick('decision_date'))}"></label>
+      <label class="f full">Decision citation<input type="text" id="rv_decision_cite" value="${esc(pick('decision_cite'))}"></label>
+      ${area('opinion_summary', 'Opinion Summary', 160)}
+      ${area('outcome_analysis', 'Outcome Analysis', 110)}
+    </div>
+    ${!b.decided && !isChair() ? '<div class="hint" style="margin-top:8px">The Chair will move this case to Decided Cases.</div>' : ''}
+    <div class="mfoot"><button class="btn" onclick="closeModal()">Skip</button>
+      <button class="btn ${!b.decided && isChair() ? '' : 'pri'}" onclick="saveDocFields('${boardId}','opinion',false,this)">Save</button>
+      ${!b.decided && isChair() ? `<button class="btn pri" onclick="saveDocFields('${boardId}','opinion',true,this)">Save &amp; move to Decided</button>` : ''}</div>`);
+}
+function saveDocFields(boardId, kind, decide, btn){
+  const keys = kind === 'brief' ? ['synopsis','filed_on'] : ['result','decision_date','decision_cite','opinion_summary','outcome_analysis'];
+  const p = { board_id: boardId }; keys.forEach(k => p[k] = val('rv_' + k));
+  if (decide) { if (!confirm('Save and move this case to Decided Cases?')) return; p.mark_decided = true; }
+  run(async () => {
+    await api('saveDocumentFields', p);
+    closeModal(); S.board = await api('getBoard'); render(true);
+    toast(decide ? 'Saved and moved to Decided Cases' : 'Saved');
   }, btn);
 }
 
@@ -955,7 +1052,7 @@ function boardBody(c, rep, votes, t, comments, docs, pending, mine){
   const chair = isChair() && pending ? `<div class="chairbar"><span class="lbl">Chair — record the Board’s decision:</span>
     <button class="btn sm gold" onclick="boardApproveModal('${c.id}')">✓ Board Approved</button>
     <button class="btn sm danger" onclick="boardDeclineModal('${c.id}')">Board Declined</button>
-    <button class="btn sm" onclick="boardReportModal('${c.id}','${esc(c.case_name).replace(/'/g,'')}')">Edit report</button></div>` : '';
+    <button class="btn sm" data-n="${esc(c.case_name)}" onclick="boardReportModal('${c.id}',this.dataset.n)">Edit report</button></div>` : '';
   return `<div class="cbody"><div>${left}</div><div>${voteHtml}${commentHtml}</div>${chair}</div>`;
 }
 const reloadBoardReview = async () => { S.breview = await api('getBoardReview'); render(true); };

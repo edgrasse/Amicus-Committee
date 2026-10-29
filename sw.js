@@ -1,6 +1,6 @@
 // IDC Amicus Committee — service worker
 // BUMP CACHE_VERSION ON EVERY DEPLOY (Handbook 5.3) so home-screen apps pick up the new version.
-const CACHE_VERSION = 'amicus-v1.3.0';
+const CACHE_VERSION = 'amicus-v1.4.0';
 
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE_VERSION).then(c => c.addAll(['./', './index.html'])).then(() => self.skipWaiting()));

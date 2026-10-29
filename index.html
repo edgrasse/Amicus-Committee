@@ -194,10 +194,14 @@ label.f>input,label.f>select,label.f>textarea{margin-top:4px}
    fields + new Opinion Summary (reviewed before saving; only the Chair can
    move a case to Decided); Date filed is a calendar date; quoting fix for
    names in buttons.
+   v1.4.0: Privacy — Case Review and Board Review show comment and vote
+   names as first name + last initial ("John F."), for everyone including
+   the Chair. The Worker sends only the short names. Status Board, Tracker
+   and Users keep full names.
    No keys in this file. Every permission is enforced by the Worker;
    hiding buttons here is only for convenience.
    ============================================================ */
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.4.0';
 const BUILD_DATE  = 'Oct 29, 2026';
 // Court choices (the field also accepts typed text for anything else)
 const COURTS = ['Illinois Supreme Court', 'Illinois Appellate Court', 'U.S. Supreme Court',
@@ -509,7 +513,7 @@ function caseBody(c, votes, t, comments, ix){
     </div></div>`;
 
   const all = S.showAll[c.id], N = comments.length, shown = all ? comments : comments.slice(-3);
-  const commentHtml = `<div class="sec"><h4>Comments (${N})</h4>
+  const commentHtml = `<div class="sec"><h4>Comments (${N}) <span class="hint" style="font-weight:400">· names shown as first name + last initial</span></h4>
     ${N > 3 ? `<button class="link" onclick="S.showAll['${c.id}']=${!all};render(true)">${all ? 'Show fewer' : `Show ${N-3} earlier comment${N-3===1?'':'s'}`}</button>` : ''}
     ${shown.map(m => commentRow(c, m, ix)).join('') || '<div class="hint">No comments yet.</div>'}
     <div class="addc"><textarea id="nc_${c.id}" placeholder="Add a comment… (if you are replying to someone, just say so)"></textarea>
@@ -1045,7 +1049,7 @@ function boardBody(c, rep, votes, t, comments, docs, pending, mine){
       <span class="acts">${own && pending ? `<button class="link" onclick="S.editing='${m.id}';render(true)">Edit</button>` : ''}
       ${isChair() ? `<button class="link" style="color:var(--no)" onclick="deleteBoardComment('${m.id}',this)">Delete</button>` : ''}</span></div><div class="txt">${esc(m.body)}</div></div>`;
   };
-  const commentHtml = `<div class="sec"><h4>Board comments (${N})</h4>
+  const commentHtml = `<div class="sec"><h4>Board comments (${N}) <span class="hint" style="font-weight:400">· names shown as first name + last initial</span></h4>
     ${N > 3 ? `<button class="link" onclick="S.showAll['${key}']=${!all};render(true)">${all ? 'Show fewer' : `Show ${N-3} earlier comment${N-3===1?'':'s'}`}</button>` : ''}
     ${shown.map(row).join('') || '<div class="hint">No comments yet.</div>'}
     ${canComment ? `<div class="addc"><textarea id="bc_${c.id}" placeholder="Add a comment for the Board…"></textarea><button class="btn pri" onclick="addBoardComment('${c.id}',this)">Post</button></div>` : ''}</div>`;

@@ -198,11 +198,16 @@ label.f>input,label.f>select,label.f>textarea{margin-top:4px}
    names as first name + last initial ("John F."), for everyone including
    the Chair. The Worker sends only the short names. Status Board, Tracker
    and Users keep full names.
+   v1.5.0: Board Review — "Motion to Support Amicus Involvement" and
+   "Second the Motion" (board members only; seconder differs from mover);
+   Board votes and comments open after the second. Chair-only ↩ Undo for
+   Approve, Share with Board, Board Approved, Mark Decided, and an
+   accidental motion / second.
    No keys in this file. Every permission is enforced by the Worker;
    hiding buttons here is only for convenience.
    ============================================================ */
-const APP_VERSION = '1.4.0';
-const BUILD_DATE  = 'Oct 29, 2026';
+const APP_VERSION = '1.5.0';
+const BUILD_DATE  = 'Oct 30, 2026';
 // Court choices (the field also accepts typed text for anything else)
 const COURTS = ['Illinois Supreme Court', 'Illinois Appellate Court', 'U.S. Supreme Court',
   'U.S. Court of Appeals for the Seventh Circuit'];
@@ -666,7 +671,11 @@ function trackerCard(c){
     ${open ? `<div style="padding:4px 16px 16px;border-top:1px solid var(--line)">
       <div class="chairbar" style="border-top:none;padding-top:10px"><span class="lbl">Board:</span>
         ${c.board_status === 'approved' ? '<span class="hint">The Board approved this case.</span>' : `<button class="btn sm gold" data-n="${esc(c.case_name)}" onclick="boardReportModal('${c.id}',this.dataset.n)">${reportOf(c.id) && reportOf(c.id).status === 'shared' ? 'Edit / re-share board report' : 'Board report'}</button>`}
-        ${c.board_status === 'pending' ? `<button class="btn sm" onclick="go('breview')">Open Board Review →</button>` : ''}</div>
+        ${c.board_status === 'pending' ? `<button class="btn sm" onclick="go('breview')">Open Board Review →</button>` : ''}
+        ${onBoard && onBoard.decided ? '<span class="hint">Decided — use “↩ Back to Current” on the Status Board to reopen.</span>'
+          : onBoard || c.board_status === 'approved' ? `<button class="btn sm" onclick="undoStep('board','${c.id}',this)">↩ Undo Board approval</button>`
+          : c.board_status === 'pending' ? `<button class="btn sm" onclick="undoStep('share','${c.id}',this)">↩ Undo share</button>`
+          : `<button class="btn sm" onclick="undoStep('approve','${c.id}',this)">↩ Undo approval (back to Case Review)</button>`}</div>
       ${STEPS.map(s => stepRow(c, t, s)).join('')}
       <label class="f" style="margin-top:12px">General notes<textarea id="tg_${c.id}" onchange="saveTrackerField('${c.id}','general_notes',this.value)">${esc(t.general_notes||'')}</textarea></label>
       <div class="sec" style="margin-top:16px"><h4>Case documents (kept permanently)</h4>
@@ -781,7 +790,7 @@ function renderBoard(){
     <td>${b.result?`<span class="res ${resClass(b.result)}">${esc(b.result)}</span>`:'<span class="res tbd">Details to be added</span>'}</td>
     <td>${clamp(b.synopsis)}</td><td>${clamp(b.opinion_summary)}</td><td>${clamp(b.outcome_analysis)}</td>
     <td style="white-space:nowrap">${ops.length ? ops.map(op => docRow(op, '')).join('') : dash}</td>
-    ${acts?`<td><div style="display:flex;flex-direction:column;gap:6px;align-items:stretch">${isChair()?`<button class="btn sm" onclick="boardModal('${b.id}')">Edit</button>`:''}${addBtn(b)}${synBtn(b)}</div></td>`:''}</tr>`; }).join('') || `<tr><td colspan="${acts?11:10}" class="muted">No decided cases yet.</td></tr>`}
+    ${acts?`<td><div style="display:flex;flex-direction:column;gap:6px;align-items:stretch">${isChair()?`<button class="btn sm" onclick="boardModal('${b.id}')">Edit</button><button class="btn sm" onclick="undoStep('decided','${b.id}',this)">↩ Back to Current</button>`:''}${addBtn(b)}${synBtn(b)}</div></td>`:''}</tr>`; }).join('') || `<tr><td colspan="${acts?11:10}" class="muted">No decided cases yet.</td></tr>`}
   </tbody></table></div>`;
 }
 
@@ -1009,6 +1018,7 @@ function boardCard(c){
       <svg class="chev" viewBox="0 0 20 20" fill="currentColor"><path d="M7 4l6 6-6 6"/></svg>
       <div><div class="ctitle">${esc(c.case_name)}</div>
         <div class="cmeta">${pending ? '<span class="badge req">Awaiting Board decision</span>' : '<span class="badge" style="background:var(--yes-bg);color:var(--yes)">Board approved</span>'}
+          ${pending ? ' · ' + (c.board_second_by ? 'Motion seconded' : c.board_motion_by ? 'Motion awaiting a second' : 'No motion yet') : ''}
           ${rep.shared_at ? ' · Sent to Board ' + fmtStamp(rep.shared_at).split(' ')[0] : ''} · Committee vote: ${committee}</div></div>
       <div class="cright">
         <div class="tally"><span class="pill">Board: ${t.total} vote${t.total===1?'':'s'}</span><span class="pill y">Yes ${t.yes}</span><span class="pill n">No ${t.no}</span>
@@ -1026,13 +1036,30 @@ function boardBody(c, rep, votes, t, comments, docs, pending, mine){
   const vm = Object.fromEntries(votes.map(v => [v.member_id, v.vote]));
   const group = k => boardMembers.filter(m => vm[m.id] === k).map(m => esc(m.name)).join(', ') || '<span class="muted">—</span>';
   const notVoted = boardMembers.filter(m => !vm[m.id]).map(m => esc(m.name)).join(', ') || '<span class="muted">Everyone has voted</span>';
-  const canVote = S.me.on_board && pending, canComment = (S.me.on_board || isChair()) && pending;
+  // v1.5.0: votes and comments open only after a board member moves and another seconds
+  const moved = c.board_motion_by, seconded = c.board_second_by, motionOpen = !!(moved && seconded);
+  const canVote = S.me.on_board && pending && motionOpen, canComment = (S.me.on_board || isChair()) && pending && motionOpen;
+  const who2 = id => esc(names[id] || 'Former member'), day = ts => fmtStamp(ts).split(' ')[0];
+  let motionAct = '';
+  if (pending && !moved) motionAct = S.me.on_board
+    ? `<button class="btn gold" onclick="boardMotion('${c.id}',this)">Motion to Support Amicus Involvement</button>`
+    : '<div class="hint">Waiting for a Board member to move to support amicus involvement.</div>';
+  else if (pending && !seconded) motionAct = S.me.on_board && S.me.id !== moved
+    ? `<button class="btn gold" onclick="boardSecond('${c.id}',this)">Second the Motion to Support Amicus Involvement</button>`
+    : `<div class="hint">${S.me.id === moved ? 'Waiting for another Board member to second your motion.' : 'Waiting for a Board member to second the motion.'}</div>`;
+  else if (pending) motionAct = '<div class="hint">The motion is seconded — voting and comments are open.</div>';
+  const motionHtml = `<div class="sec"><h4>Motion</h4>
+    ${moved ? `<div style="font-size:14px">Motion to Support Amicus Involvement — moved by <b>${who2(moved)}</b> <span class="muted">${day(c.board_motion_at)}</span></div>` : ''}
+    ${seconded ? `<div style="font-size:14px">Seconded by <b>${who2(seconded)}</b> <span class="muted">${day(c.board_second_at)}</span></div>` : ''}
+    ${!moved && !pending ? '<div class="hint">No motion was recorded in the app.</div>' : ''}
+    <div style="margin-top:6px">${motionAct}</div>
+    ${isChair() && pending && moved ? `<button class="link" style="margin-top:6px" onclick="undoStep('motion','${c.id}',this)">↩ Undo ${seconded ? 'second' : 'motion'}</button>` : ''}</div>`;
   const vb = (k,l,cl) => `<button class="vb ${cl} ${mine===k?'on':''}" onclick="castBoardVote('${c.id}','${k}',this)">${l}</button>`;
   const left = `<div class="sec"><h4>Committee report to the Board</h4><div class="summary">${esc(rep.report_text) || '<span class="muted">No report text.</span>'}</div></div>
     <div class="sec"><h4>Documents</h4>${docs.length ? `<ul class="docs">${docs.map(d => `<li><span class="pdf">PDF</span><button class="doclink" onclick="openDoc('${d.id}')">${esc(d.file_name)}</button></li>`).join('')}</ul>` : '<div class="hint">No documents.</div>'}</div>`;
   const voteHtml = `<div class="sec"><h4>Board vote — should IDC participate as amicus?</h4>
     ${canVote ? `<div class="votebtns">${vb('yes','Yes','y')}${vb('no','No','n')}${vb('abstain','Abstain','a')}${vb('recuse','Recuse','r')}</div><div class="hint" style="margin-bottom:8px">You can change your vote until the Chair records the Board’s decision.</div>`
-      : `<div class="hint" style="margin-bottom:8px">${pending ? (S.me.on_board ? '' : 'Only Board members vote here.') : 'Board voting is closed.'}</div>`}
+      : `<div class="hint" style="margin-bottom:8px">${pending ? (!motionOpen ? 'Voting and comments open once the motion is made and seconded.' : S.me.on_board ? '' : 'Only Board members vote here.') : 'Board voting is closed.'}</div>`}
     <div class="voters">
       <div><span class="lbl" style="color:var(--yes)">Yes (${t.yes})</span>${group('yes')}</div>
       <div><span class="lbl" style="color:var(--no)">No (${t.no})</span>${group('no')}</div>
@@ -1053,14 +1080,47 @@ function boardBody(c, rep, votes, t, comments, docs, pending, mine){
     ${N > 3 ? `<button class="link" onclick="S.showAll['${key}']=${!all};render(true)">${all ? 'Show fewer' : `Show ${N-3} earlier comment${N-3===1?'':'s'}`}</button>` : ''}
     ${shown.map(row).join('') || '<div class="hint">No comments yet.</div>'}
     ${canComment ? `<div class="addc"><textarea id="bc_${c.id}" placeholder="Add a comment for the Board…"></textarea><button class="btn pri" onclick="addBoardComment('${c.id}',this)">Post</button></div>` : ''}</div>`;
-  const chair = isChair() && pending ? `<div class="chairbar"><span class="lbl">Chair — record the Board’s decision:</span>
+  const chair = !isChair() ? '' : pending ? `<div class="chairbar"><span class="lbl">Chair — record the Board’s decision:</span>
     <button class="btn sm gold" onclick="boardApproveModal('${c.id}')">✓ Board Approved</button>
     <button class="btn sm danger" onclick="boardDeclineModal('${c.id}')">Board Declined</button>
-    <button class="btn sm" data-n="${esc(c.case_name)}" onclick="boardReportModal('${c.id}',this.dataset.n)">Edit report</button></div>` : '';
-  return `<div class="cbody"><div>${left}</div><div>${voteHtml}${commentHtml}</div>${chair}</div>`;
+    <button class="btn sm" data-n="${esc(c.case_name)}" onclick="boardReportModal('${c.id}',this.dataset.n)">Edit report</button>
+    <button class="btn sm" onclick="undoStep('share','${c.id}',this)">↩ Undo share (back to Tracker)</button></div>`
+    : `<div class="chairbar"><span class="lbl">Chair:</span><button class="btn sm" onclick="undoStep('board','${c.id}',this)">↩ Undo Board approval</button></div>`;
+  return `<div class="cbody"><div>${left}</div><div>${motionHtml}${voteHtml}${commentHtml}</div>${chair}</div>`;
 }
 const reloadBoardReview = async () => { S.breview = await api('getBoardReview'); render(true); };
 function castBoardVote(caseId, vote, btn){ run(async () => { await api('castBoardVote', { case_id: caseId, vote }); await reloadBoardReview(); }, btn); }
+// v1.5.0 — Board motion and second (board members only; the Worker enforces it)
+function boardMotion(caseId, btn){
+  if (!confirm('Move that the Board support the Amicus Committee’s recommendation for amicus involvement?\n\nA motion cannot be withdrawn. Another Board member must second it before voting opens.')) return;
+  run(async () => { await api('boardMotion', { case_id: caseId }); await reloadBoardReview(); toast('Motion made — waiting for a second'); }, btn);
+}
+function boardSecond(caseId, btn){
+  if (!confirm('Second the Motion to Support Amicus Involvement? Voting and comments will open.')) return;
+  run(async () => { await api('boardSecond', { case_id: caseId }); await reloadBoardReview(); toast('Motion seconded — voting is open'); }, btn);
+}
+// v1.5.0 — Chair-only Undo. Each step first asks the Worker what would be removed (preview), then confirms.
+const UNDO = {
+  approve: { action: 'undoApprove',       idKey: 'case_id',  done: 'Back in Case Review',
+    msg: () => 'Undo approval?\n\nThe case goes back to Case Review, where the committee can comment and vote again. Its Tracker notes and any draft board report are kept.' },
+  share:   { action: 'undoShare',         idKey: 'case_id',  done: 'Back in your Chair Tracker',
+    msg: n => `Undo “Share with Board”?\n\nThe case leaves Board Review and goes back to your Chair Tracker. The report becomes a draft again.\n\nThis permanently removes: ${[n.motion ? 'the Board motion' + (n.second ? ' and second' : '') : '', `${n.votes} Board vote(s)`, `${n.comments} Board comment(s)`].filter(Boolean).join(', ')}.` },
+  board:   { action: 'undoBoardApproval', idKey: 'case_id',  done: 'Back on Board Review',
+    msg: n => `Undo Board approval?\n\nThe case goes back to Board Review (its motion, votes and comments are kept) and “Board Approval” is unchecked in your Tracker.\n\nIts Status Board entry is removed${(n.documents || n.updates || n.synopses) ? `, including ${[n.documents ? n.documents + ' document(s)' : '', n.updates ? n.updates + ' status update(s)' : '', n.synopses ? n.synopses + ' saved synopsis(es)' : ''].filter(Boolean).join(', ')} added to it` : ''}.` },
+  decided: { action: 'undoDecided',       idKey: 'board_id', done: 'Moved back to Current Cases',
+    msg: () => 'Move this case back to Current Cases?\n\nThe result, summaries and opinion stay as entered.' },
+  motion:  { action: 'undoBoardMotion',   idKey: 'case_id',  done: 'Cleared',
+    msg: () => 'Clear the most recent step of the Board motion (the second, or the motion if not yet seconded)?\n\nVotes and comments already posted are kept, but voting closes until the motion is seconded again.' }
+};
+function undoStep(kind, id, btn){
+  const u = UNDO[kind];
+  run(async () => {
+    const pv = await api(u.action, { [u.idKey]: id, preview: true });
+    if (!confirm(u.msg((pv && pv.counts) || {}))) return;
+    await api(u.action, { [u.idKey]: id });
+    toast(u.done); await loadTab();
+  }, btn);
+}
 function addBoardComment(caseId, btn){
   const el = $('#bc_' + caseId), body = el.value.trim(); if (!body) return;
   run(async () => { await api('addBoardComment', { case_id: caseId, body }); el.value = ''; await reloadBoardReview(); }, btn);

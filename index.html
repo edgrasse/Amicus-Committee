@@ -172,6 +172,14 @@ label.f>input,label.f>select,label.f>textarea{margin-top:4px}
 .empty{padding:28px;text-align:center;color:var(--muted);background:#fff;border:1px dashed var(--line);border-radius:var(--radius)}
 .muted{color:var(--muted)}
 .loading{padding:40px;text-align:center;color:var(--muted)}
+/* v1.7.0 Status Board cards */
+.bcard .chead{align-items:flex-start}
+.bmeta{font-size:12.5px;color:var(--muted);margin-top:2px;display:flex;flex-wrap:wrap;gap:4px 10px}
+.bmeta b{color:var(--text);font-weight:600}
+.blatest{font-size:13px;color:var(--text);max-width:380px;overflow-wrap:anywhere}
+.blatest .d{color:var(--muted);font-size:12px;margin-right:4px}
+.bdocs{display:flex;flex-direction:column;gap:6px}
+@media(max-width:600px){.bcard .cright{margin-left:30px}}
 .temp-pw{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:18px;background:#f6f7f9;border:1px solid var(--line);border-radius:8px;padding:10px;text-align:center;user-select:all}
 </style>
 </head>
@@ -207,10 +215,13 @@ label.f>input,label.f>select,label.f>textarea{margin-top:4px}
    committee members on the Users tab (count + copy emails of those who
    haven't responded); after the deadline the Chair sees a reminder banner
    listing non-responders with Deactivate / Keep buttons (one at a time).
+   v1.7.0: Status Board shown as cards (same look as the other tabs; fits
+   the screen). Click a case to open the synopsis, summaries, documents,
+   history and Actions. Layout only — data and permissions unchanged.
    No keys in this file. Every permission is enforced by the Worker;
    hiding buttons here is only for convenience.
    ============================================================ */
-const APP_VERSION = '1.6.0';
+const APP_VERSION = '1.7.0';
 const BUILD_DATE  = 'Nov 7, 2026';
 // Court choices (the field also accepts typed text for anything else)
 const COURTS = ['Illinois Supreme Court', 'Illinois Appellate Court', 'U.S. Supreme Court',
@@ -765,39 +776,54 @@ function resClass(r){ r = (r||'').toLowerCase(); if (r.startsWith('unfav')) retu
 const dash = '<span class="muted">—</span>';
 const clamp = txt => txt ? `<div class="clamp" onclick="this.classList.toggle('open')">${esc(txt)}</div>` : dash;
 
+// v1.7.0: Status Board as cards (same look as Case Review / Board Review). Click a card to open it.
 function renderBoard(){
   const B = S.board, ix = boardIndex(), cur = B.board.filter(b => !b.decided), dec = B.board.filter(b => b.decided);
-  const acts = isChair() || canSynopsis() || B.board.some(b => canAddDocs(ix, b));   // show the actions column
-  const cols = acts ? 8 : 7;
-  const synBtn = b => canSynopsis() ? `<button class="btn sm gold" onclick="synopsisModal('${b.id}')">Synopsis to IDC Members</button>` : '';
-  const addBtn = b => canAddDocs(ix, b) ? `<button class="btn sm" onclick="addDocModal('${b.id}')">+ Add document</button>` : '';
-  return `<div class="bar"><h2>Status Board</h2><span class="hint">Click any long text to expand it.</span><div class="sp"></div>
+  return `<div class="bar"><h2>Status Board</h2><span class="hint">Click a case to see the synopsis, documents and history.</span><div class="sp"></div>
     ${isChair() ? `<button class="btn" onclick="boardModal()">+ Add case to board</button>` : ''}</div>
   <div class="section-title">Current Cases <span class="count">${cur.length}</span></div>
-  <div class="tbl-wrap"><table><thead><tr><th>Case Name</th><th>Court</th><th>Case No.</th><th>Author(s)</th><th>Date Filed</th><th>Synopsis of Argument</th><th style="min-width:240px">Status</th>${acts?'<th></th>':''}</tr></thead><tbody>
-  ${cur.map(b => {
-    const ups = ix.updates(b.id), last = ups[ups.length-1], h = S.hist[b.id], ed = canEditBoard(ix, b);
-    const who = u => esc(u.author_label || ix.names[u.member_id] || '');
-    return `<tr><td><b>${esc(b.case_name)}</b>${caseDocLinks(b)}</td><td class="w-court">${esc(b.court)||dash}</td><td class="w-court">${esc(b.court_no)||dash}</td><td class="w-auth">${esc(b.authors_text)||dash}</td>
-      <td class="w-date">${filedText(b)||dash}</td><td>${clamp(b.synopsis)}</td>
-      <td><div class="status-latest">${last?`<span class="d">${fmtDate(last.entry_date)}</span> ${esc(last.note)}`:'<span class="muted">No updates yet</span>'}</div>
-        <button class="link" onclick="S.hist['${b.id}']=!S.hist['${b.id}'];render(true)">${h?'Hide':'History'} (${ups.length})${ed?' · Add update':''}</button></td>
-      ${acts?`<td><div style="display:flex;flex-direction:column;gap:6px;align-items:stretch">${isChair()?`<button class="btn sm" onclick="boardModal('${b.id}')">Edit</button><button class="btn sm" onclick="decideModal('${b.id}')">Mark Decided</button>`:''}${addBtn(b)}${synBtn(b)}</div></td>`:''}</tr>
-      ${h ? `<tr class="hist"><td colspan="${cols}"><ul>${[...ups].reverse().map(u => `<li><span class="d">${fmtDate(u.entry_date)} · ${who(u)}</span>${esc(u.note)}</li>`).join('') || '<li class="muted">No updates yet.</li>'}</ul>
-        ${ed ? `<div class="addc"><input type="text" id="su_${b.id}" placeholder="New status update…" onkeydown="if(event.key==='Enter')addStatus('${b.id}',this.nextElementSibling)"><button class="btn sm pri" onclick="addStatus('${b.id}',this)">Add</button></div>` : '<div class="hint" style="margin-top:6px">Only the Chair and the assigned author(s) can add updates.</div>'}</td></tr>` : ''}`;
-  }).join('') || `<tr><td colspan="${cols}" class="muted">No current cases.</td></tr>`}
-  </tbody></table></div>
-
+  ${cur.map(b => boardEntryCard(b, ix)).join('') || '<div class="empty">No current cases.</div>'}
   <div class="section-title">Decided Cases <span class="count">${dec.length}</span></div>
-  <div class="tbl-wrap"><table><thead><tr><th>Case Name</th><th>Court</th><th>Case No.</th><th>Author(s)</th><th>Date Filed</th><th>Result</th><th>Synopsis of Argument</th><th>Opinion Summary</th><th>Outcome Analysis</th><th>Opinion</th>${acts?'<th></th>':''}</tr></thead><tbody>
-  ${dec.map(b => { const ops = boardDocsOf(b.id).filter(d => d.doc_kind === 'opinion');
-    return `<tr><td><b>${esc(b.case_name)}</b>${b.decision_date||b.decision_cite?`<div class="cmeta">${b.decision_cite?esc(b.decision_cite):''}${b.decision_cite&&b.decision_date?' · ':''}${b.decision_date?'Decided '+fmtDate(b.decision_date):''}</div>`:''}${caseDocLinks(b)}</td>
-    <td class="w-court">${esc(b.court)||dash}</td><td class="w-court">${esc(b.court_no)||dash}</td><td class="w-auth">${esc(b.authors_text)||dash}</td><td class="w-date">${filedText(b)||dash}</td>
-    <td>${b.result?`<span class="res ${resClass(b.result)}">${esc(b.result)}</span>`:'<span class="res tbd">Details to be added</span>'}</td>
-    <td>${clamp(b.synopsis)}</td><td>${clamp(b.opinion_summary)}</td><td>${clamp(b.outcome_analysis)}</td>
-    <td style="white-space:nowrap">${ops.length ? ops.map(op => docRow(op, '')).join('') : dash}</td>
-    ${acts?`<td><div style="display:flex;flex-direction:column;gap:6px;align-items:stretch">${isChair()?`<button class="btn sm" onclick="boardModal('${b.id}')">Edit</button><button class="btn sm" onclick="undoStep('decided','${b.id}',this)">↩ Back to Current</button>`:''}${addBtn(b)}${synBtn(b)}</div></td>`:''}</tr>`; }).join('') || `<tr><td colspan="${acts?11:10}" class="muted">No decided cases yet.</td></tr>`}
-  </tbody></table></div>`;
+  ${dec.map(b => boardEntryCard(b, ix)).join('') || '<div class="empty">No decided cases yet.</div>'}`;
+}
+function boardEntryCard(b, ix){
+  const key = 's' + b.id, open = S.open[key], ups = ix.updates(b.id), last = ups[ups.length-1];
+  const decidedLine = (b.decision_cite || b.decision_date) ? `<span>${b.decision_cite ? esc(b.decision_cite) : ''}${b.decision_cite && b.decision_date ? ' · ' : ''}${b.decision_date ? 'Decided ' + fmtDate(b.decision_date) : ''}</span>` : '';
+  const right = b.decided
+    ? (b.result ? `<span class="res ${resClass(b.result)}">${esc(b.result)}</span>` : '<span class="res tbd">Details to be added</span>')
+    : `<div class="blatest">${last ? `<span class="d">${fmtDate(last.entry_date)}</span>${esc(last.note)}` : '<span class="muted">No updates yet</span>'}</div><div class="hint" style="margin-top:2px">History (${ups.length})</div>`;
+  return `<div class="card bcard ${open?'open':''}">
+    <div class="chead" onclick="S.open['${key}']=!S.open['${key}'];render(true)">
+      <svg class="chev" viewBox="0 0 20 20" fill="currentColor"><path d="M7 4l6 6-6 6"/></svg>
+      <div style="flex:1;min-width:220px"><div class="ctitle">${esc(b.case_name)}</div>
+        <div class="bmeta">${b.court ? `<span>${esc(b.court)}</span>` : ''}${b.court_no ? `<span>No. ${esc(b.court_no)}</span>` : ''}${filedText(b) ? `<span>Filed <b>${filedText(b)}</b></span>` : ''}${decidedLine}</div>
+        ${b.authors_text ? `<div class="bmeta"><span>Author(s): ${esc(b.authors_text)}</span></div>` : ''}</div>
+      <div class="cright" style="${b.decided ? '' : 'display:block'}">${right}</div>
+    </div>
+    ${open ? boardEntryBody(b, ix, ups) : ''}
+  </div>`;
+}
+function boardEntryBody(b, ix, ups){
+  const ed = canEditBoard(ix, b), who = u => esc(u.author_label || ix.names[u.member_id] || '');
+  const txt = (h, t) => `<div class="sec"><h4>${h}</h4>${t ? `<div class="summary">${esc(t)}</div>` : '<div class="hint">Not added yet.</div>'}</div>`;
+  const caseDocs = b.case_id ? (S.board.caseDocs || []).filter(d => d.case_id === b.case_id) : [];
+  const own = boardDocsOf(b.id), ops = own.filter(d => d.doc_kind === 'opinion');
+  const others = [...own.filter(d => !(b.decided && d.doc_kind === 'opinion')).map(d => docRow(d, d.doc_kind === 'other' ? (d.doc_label || 'Other') : DOC_BADGE[d.doc_kind])), ...caseDocs.map(d => docRow(d, ''))];
+  const docsSec = (h, list) => `<div class="sec"><h4>${h}</h4>${list.length ? `<div class="bdocs">${list.join('')}</div>` : '<div class="hint">None yet.</div>'}</div>`;
+  const hist = `<div class="sec"><h4>Status history</h4><div class="hist" style="background:none"><ul>${[...ups].reverse().map(u => `<li><span class="d">${fmtDate(u.entry_date)} · ${who(u)}</span>${esc(u.note)}</li>`).join('') || '<li class="muted">No updates yet.</li>'}</ul></div>
+    ${ed ? `<div class="addc"><input type="text" id="su_${b.id}" placeholder="New status update…" onkeydown="if(event.key==='Enter')addStatus('${b.id}',this.nextElementSibling)"><button class="btn sm pri" onclick="addStatus('${b.id}',this)">Add</button></div>`
+         : (b.decided ? '' : '<div class="hint" style="margin-top:6px">Only the Chair and the assigned author(s) can add updates.</div>')}</div>`;
+  const left = b.decided
+    ? txt('Synopsis of Argument', b.synopsis) + txt('Opinion Summary', b.opinion_summary) + txt('Outcome Analysis', b.outcome_analysis)
+    : txt('Synopsis of Argument', b.synopsis) + docsSec('Documents', others);
+  const rightCol = b.decided ? docsSec('Opinion', ops.map(d => docRow(d, ''))) + docsSec('Other documents', others) + hist : hist;
+  const btns = [
+    isChair() ? `<button class="btn sm" onclick="boardModal('${b.id}')">Edit</button>` : '',
+    isChair() ? (b.decided ? `<button class="btn sm" onclick="undoStep('decided','${b.id}',this)">↩ Back to Current</button>` : `<button class="btn sm" onclick="decideModal('${b.id}')">Mark Decided</button>`) : '',
+    canAddDocs(ix, b) ? `<button class="btn sm" onclick="addDocModal('${b.id}')">+ Add document</button>` : '',
+    canSynopsis() ? `<button class="btn sm gold" onclick="synopsisModal('${b.id}')">Synopsis to IDC Members</button>` : ''
+  ].join('');
+  return `<div class="cbody"><div>${left}</div><div>${rightCol}</div>${btns ? `<div class="chairbar"><span class="lbl">Actions:</span>${btns}</div>` : ''}</div>`;
 }
 
 function addStatus(boardId, btn){

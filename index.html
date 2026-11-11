@@ -223,10 +223,14 @@ label.f>input,label.f>select,label.f>textarea{margin-top:4px}
    (public Illinois Courts opinion feed; PDF saved automatically; weekly auto
    check), AI decision summary, Open docket in re:SearchIL, Move to Amicus
    Review, Delete (archived as "Watched — no IDC involvement").
+   v1.8.1: "Add a Case to Watch" form starts with empty fields (removed the
+   grey example text that looked like a real case number).
+   v1.8.2: "Check for decision" shows its result in a box with the date, and
+   every check is recorded in the status history (Worker Session 8).
    No keys in this file. Every permission is enforced by the Worker;
    hiding buttons here is only for convenience.
    ============================================================ */
-const APP_VERSION = '1.8.0';
+const APP_VERSION = '1.8.2';
 const BUILD_DATE  = 'Nov 11, 2026';
 // Court choices (the field also accepts typed text for anything else)
 const COURTS = ['Illinois Supreme Court', 'Illinois Appellate Court', 'U.S. Supreme Court',
@@ -654,11 +658,11 @@ function watchModal(id){
   const inp = (k, l, cls, ph) => `<label class="f ${cls||''}">${l}<input type="text" id="wf_${k}" value="${esc(w[k]||'')}" placeholder="${ph||''}"></label>`;
   openModal(`<h3>${id ? 'Edit Case to Watch' : 'Add a Case to Watch'}</h3>
     <div class="fgrid">
-      ${inp('case_name','Case name','full','e.g. Hayden v. True Accord')}
+      ${inp('case_name','Case name','full')}
       <label class="f">Court${courtInput('wf_court', id ? w.court : 'Illinois Appellate Court')}</label>
       <label class="f">District<select id="wf_district">${DISTRICTS.map(d => `<option ${w.district===d?'selected':''}>${d}</option>`).join('')}</select></label>
-      ${inp('court_no','Case No.','','4-26-0454')}${inp('lower_court','Circuit court / county (optional)')}
-      <div class="full hint" style="margin-top:-6px">Use the format 4-26-0454 (appellate) or 132438 (Supreme Court) so “Check for decision” can find it.</div>
+      ${inp('court_no','Case No.')}${inp('lower_court','Circuit court / county (optional)')}
+      <div class="full hint" style="margin-top:-6px">Case No. format: district-year-number for the appellate court (like 1-25-0123), or the 6-digit number for the Supreme Court, so “Check for decision” can find it.</div>
       <label class="f full">Why we're watching<textarea id="wf_notes" style="min-height:90px">${esc(w.notes||'')}</textarea></label>
       ${id ? '' : `<label class="f full">Briefs (PDF, optional — you can add more later)<input type="file" id="wf_files" accept="application/pdf,.pdf" multiple></label>`}
     </div>
@@ -709,7 +713,13 @@ function checkDecision(id, btn){
       openModal(`<h3>Decision found ✓</h3><div class="infobox" style="background:var(--yes-bg);border-color:#bfe3cd">${esc(r.message)}</div>
         <p>A note was added to the status history. Would you like an AI summary of the decision to review?</p>
         <div class="mfoot"><button class="btn" onclick="closeModal()">Not now</button><button class="btn gold" onclick="watchSummaryModal('${id}')">✎ AI summary</button></div>`);
-    } else toast(r.message, r.status === 'no_number');
+    } else {
+      // v1.8.2: show the result until it's closed (not a quick pop-up); it is also recorded in the history
+      const title = r.status === 'no_number' ? 'Case number needed' : r.status === 'already' ? 'Already up to date' : 'No decision yet';
+      openModal(`<h3>${title}</h3><div class="infobox">${esc(r.message)}</div>
+        ${r.status === 'none' ? '<p class="hint">This check is noted in the case’s status history. The app also checks automatically every week.</p>' : ''}
+        <div class="mfoot">${r.status === 'no_number' ? `<button class="btn" onclick="watchModal('${id}')">Add case number</button>` : ''}<button class="btn pri" onclick="closeModal()">OK</button></div>`);
+    }
   }, btn).finally(() => { if (document.body.contains(btn)) btn.textContent = old; });
 }
 function openResearch(id){

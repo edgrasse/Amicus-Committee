@@ -218,11 +218,16 @@ label.f>input,label.f>select,label.f>textarea{margin-top:4px}
    v1.7.0: Status Board shown as cards (same look as the other tabs; fits
    the screen). Click a case to open the synopsis, summaries, documents,
    history and Actions. Layout only — data and permissions unchanged.
+   v1.8.0: Cases to Watch (top of Case Review; committee only): add / edit,
+   documents, status notes, member comments (no votes), "Check for decision"
+   (public Illinois Courts opinion feed; PDF saved automatically; weekly auto
+   check), AI decision summary, Open docket in re:SearchIL, Move to Amicus
+   Review, Delete (archived as "Watched — no IDC involvement").
    No keys in this file. Every permission is enforced by the Worker;
    hiding buttons here is only for convenience.
    ============================================================ */
-const APP_VERSION = '1.7.0';
-const BUILD_DATE  = 'Nov 7, 2026';
+const APP_VERSION = '1.8.0';
+const BUILD_DATE  = 'Nov 11, 2026';
 // Court choices (the field also accepts typed text for anything else)
 const COURTS = ['Illinois Supreme Court', 'Illinois Appellate Court', 'U.S. Supreme Court',
   'U.S. Court of Appeals for the Seventh Circuit'];
@@ -473,8 +478,10 @@ const lockedCase = c => c.vote_deadline && today() > c.vote_deadline;
 
 function renderReview(){
   const R = S.review, ix = reviewIndex();
-  return `<div class="bar"><h2>Case Review</h2><span class="hint">${R.cases.length} open for comment and vote · click a case to expand</span>
+  return `<div class="bar"><h2>Case Review</h2><span class="hint">Click a case to expand it.</span>
     <div class="sp"></div>${isChair() ? `<button class="btn pri" onclick="caseModal()">+ New Case</button>` : ''}</div>
+    ${renderWatch(ix)}
+    <div class="section-title">Open for comment and vote <span class="count">${R.cases.length}</span></div>
     ${R.cases.length ? R.cases.map(c => caseCard(c, ix)).join('') : '<div class="empty">No cases are open for review right now.</div>'}
     ${renderArchive()}`;
 }
@@ -564,8 +571,8 @@ function renderArchive(){
   const A = S.review.archive;
   return `<div class="section-title">Archive — every case presented <span class="count">${A.length}</span></div>
   ${A.length ? `<div class="tbl-wrap"><table><thead><tr><th>Case</th><th>Case No.</th><th>Type</th><th>Presented</th><th>Final vote</th><th>Outcome</th></tr></thead><tbody>
-  ${A.map(a => `<tr><td>${esc(a.case_name)}</td><td>${esc(a.court_no)}</td><td>${a.case_type==='pla'?'PLA':'Request'}</td><td>${fmtDate(a.presented_at)}</td>
-    <td style="white-space:nowrap">${a.yes_count} Yes / ${a.no_count} No${a.abstain_count||a.recuse_count?` <span class="muted">(${a.abstain_count} abst., ${a.recuse_count} rec.)</span>`:''}</td>
+  ${A.map(a => `<tr><td>${esc(a.case_name)}</td><td>${esc(a.court_no)}</td><td>${a.case_type==='pla'?'PLA':a.case_type==='watch'?'Watched':'Request'}</td><td>${fmtDate(a.presented_at)}</td>
+    <td style="white-space:nowrap">${a.case_type==='watch' ? '<span class="muted">—</span>' : `${a.yes_count} Yes / ${a.no_count} No${a.abstain_count||a.recuse_count?` <span class="muted">(${a.abstain_count} abst., ${a.recuse_count} rec.)</span>`:''}`}</td>
     <td><span class="res ${a.outcome.startsWith('Approved')?'fav':'tbd'}">${esc(a.outcome)}</span></td></tr>`).join('')}
   </tbody></table></div>` : '<div class="empty">No cases have been decided yet.</div>'}`;
 }
@@ -582,6 +589,183 @@ function deleteComment(id, btn){ if (!confirm('Delete this comment?')) return; r
 function addDocs(target, input){ const files = [...input.files]; input.value = ''; run(async () => { await uploadMany(target, files); await reloadAfterDocChange(); }); }
 function removeDoc(id, name){ if (!confirm(`Permanently delete ${name}?`)) return; run(async () => { await api('deleteDocument', { id }); await reloadAfterDocChange(); toast('Document deleted'); }); }
 async function reloadAfterDocChange(){ if (S.tab === 'review') await reloadReview(); else if (S.tab === 'tracker') { S.tracker = await api('getTracker'); render(true); } else if (S.tab === 'board') { S.board = await api('getBoard'); render(true); } else if (S.tab === 'breview') { S.breview = await api('getBoardReview'); render(true); } }
+
+/* ============================================================
+   CASES TO WATCH (v1.8.0) — committee members see and comment; the Chair adds,
+   edits, uploads, checks for a decision, moves to Amicus Review or deletes.
+   ============================================================ */
+const RESEARCH_IL = 'https://researchil.tylerhost.net/';
+const WATCH_DOC_LABEL = { brief: 'Brief', opinion: 'Opinion / order' };
+const DISTRICTS = ['', 'First District', 'Second District', 'Third District', 'Fourth District', 'Fifth District'];
+const watchOf = id => (S.review.watch || []).find(w => w.id === id);
+function renderWatch(ix){
+  const list = S.review.watch || [];
+  return `<div class="section-title" style="margin-top:6px">Cases to Watch <span class="count">${list.length}</span>
+      <span class="hint" style="font-weight:400">Cases we're following before any amicus vote.</span>
+      ${isChair() ? `<button class="btn sm" onclick="watchModal()">+ Case to Watch</button>` : ''}</div>
+    ${list.length ? list.map(w => watchCard(w, ix)).join('') : '<div class="empty">No cases are being watched right now.</div>'}`;
+}
+function watchCard(w, ix){
+  const R = S.review, key = 'w' + w.id, open = S.open[key];
+  const cms = (R.watchComments || []).filter(c => c.watch_id === w.id);
+  const right = w.decision_found_at
+    ? `<span class="badge" style="background:var(--yes-bg);color:var(--yes)">Decision posted</span>${w.decision_cite ? ` <span>${esc(w.decision_cite)}</span>` : ''}`
+    : `<span>Last checked: ${w.last_checked_at ? fmtStamp(w.last_checked_at).split(' ')[0] : 'not yet'}</span>`;
+  return `<div class="card bcard ${open?'open':''}">
+    <div class="chead" onclick="S.open['${key}']=!S.open['${key}'];render(true)">
+      <svg class="chev" viewBox="0 0 20 20" fill="currentColor"><path d="M7 4l6 6-6 6"/></svg>
+      <div style="flex:1;min-width:220px"><div class="ctitle">${esc(w.case_name)}</div>
+        <div class="bmeta"><span class="badge" style="font-size:11px">Watching</span>${w.court ? `<span>${esc(w.court)}</span>` : ''}${w.district ? `<span>${esc(w.district)}</span>` : ''}${w.court_no ? `<span>No. ${esc(w.court_no)}</span>` : ''}<span>Since ${fmtStamp(w.created_at).split(' ')[0]}</span></div>
+        ${w.lower_court ? `<div class="bmeta"><span>From: ${esc(w.lower_court)}</span></div>` : ''}</div>
+      <div class="cright">${right}<span>💬 ${cms.length}</span></div>
+    </div>
+    ${open ? watchBody(w, ix, cms) : ''}
+  </div>`;
+}
+function watchBody(w, ix, cms){
+  const R = S.review, docs = (R.watchDocs || []).filter(d => d.watch_id === w.id), ups = (R.watchUpdates || []).filter(u => u.watch_id === w.id);
+  const docLine = d => `<div style="font-size:13.5px"><span class="pdf">PDF</span> ${d.doc_kind === 'other' ? (d.doc_label ? `<span class="badge" style="font-size:10.5px">${esc(d.doc_label)}</span> ` : '') : `<span class="badge" style="font-size:10.5px">${WATCH_DOC_LABEL[d.doc_kind]}</span> `}<button class="doclink" onclick="openDoc('${d.id}')">${esc(d.file_name)}</button>${isChair() ? ` <button class="link" style="color:var(--no);font-size:12px" data-n="${esc(d.file_name)}" onclick="removeDoc('${d.id}',this.dataset.n)">remove</button>` : ''}</div>`;
+  const decision = w.decision_found_at ? `<div class="sec"><h4>Decision</h4>
+      <div class="infobox" style="background:var(--yes-bg);border-color:#bfe3cd">${esc(w.decision_title || '')}${w.decision_cite ? ` — <b>${esc(w.decision_cite)}</b>` : ''}<br><span class="hint">Found ${fmtStamp(w.decision_found_at).split(' ')[0]} on illinoiscourts.gov${w.decision_doc_id ? ' · PDF saved below' : ''}</span></div>
+      ${w.decision_summary ? `<div class="summary" style="margin-top:8px">${esc(w.decision_summary)}</div>` : ''}
+      ${isChair() && w.decision_doc_id ? `<button class="btn sm" style="margin-top:8px" onclick="watchSummaryModal('${w.id}')">${w.decision_summary ? 'Edit summary' : '✎ AI summary of the decision'}</button>` : ''}</div>` : '';
+  const left = `<div class="sec"><h4>Why we're watching</h4>${w.notes ? `<div class="summary">${esc(w.notes)}</div>` : '<div class="hint">No notes yet.</div>'}</div>
+    ${decision}
+    <div class="sec"><h4>Documents</h4>${docs.length ? `<div class="bdocs">${docs.map(docLine).join('')}</div>` : '<div class="hint">No documents yet.</div>'}</div>
+    <div class="sec"><h4>Status history</h4><div class="hist" style="background:none"><ul>${[...ups].reverse().map(u => `<li><span class="d">${fmtDate(u.entry_date)}</span>${esc(u.note)}</li>`).join('') || '<li class="muted">No updates yet.</li>'}</ul></div>
+      ${isChair() ? `<div class="addc"><input type="text" id="wu_${w.id}" placeholder="New status note (e.g. Reply brief filed)…" onkeydown="if(event.key==='Enter')addWatchUpdate('${w.id}',this.nextElementSibling)"><button class="btn sm pri" onclick="addWatchUpdate('${w.id}',this)">Add</button></div>` : ''}</div>`;
+  const N = cms.length, all = S.showAll['w' + w.id], shown = all ? cms : cms.slice(-3);
+  const rightCol = `<div class="sec"><h4>Comments (${N}) <span class="hint" style="font-weight:400">· names shown as first name + last initial · no voting while watching</span></h4>
+    ${N > 3 ? `<button class="link" onclick="S.showAll['w${w.id}']=${!all};render(true)">${all ? 'Show fewer' : `Show ${N-3} earlier comment${N-3===1?'':'s'}`}</button>` : ''}
+    ${shown.map(m => commentRow(w, m, ix)).join('') || '<div class="hint">No comments yet.</div>'}
+    <div class="addc"><textarea id="wc_${w.id}" placeholder="Add a comment…"></textarea><button class="btn pri" onclick="addWatchComment('${w.id}',this)">Post</button></div></div>`;
+  const chair = isChair() ? `<div class="chairbar"><span class="lbl">Chair actions:</span>
+    <button class="btn sm" onclick="watchModal('${w.id}')">Edit</button>
+    <button class="btn sm" onclick="watchDocModal('${w.id}')">+ Add document</button>
+    <button class="btn sm" onclick="checkDecision('${w.id}',this)">⟳ Check for decision</button>
+    <button class="btn sm" onclick="openResearch('${w.id}')">Open docket in re:SearchIL ↗</button>
+    <button class="btn sm gold" onclick="moveWatchModal('${w.id}')">Move to Amicus Review →</button>
+    <button class="btn sm danger" onclick="deleteWatchModal('${w.id}')">Delete</button></div>` : '';
+  return `<div class="cbody"><div>${left}</div><div>${rightCol}</div>${chair}</div>`;
+}
+const WATCH_FIELDS = ['case_name','court','district','court_no','lower_court','notes'];
+function watchModal(id){
+  const w = id ? watchOf(id) : {};
+  const inp = (k, l, cls, ph) => `<label class="f ${cls||''}">${l}<input type="text" id="wf_${k}" value="${esc(w[k]||'')}" placeholder="${ph||''}"></label>`;
+  openModal(`<h3>${id ? 'Edit Case to Watch' : 'Add a Case to Watch'}</h3>
+    <div class="fgrid">
+      ${inp('case_name','Case name','full','e.g. Hayden v. True Accord')}
+      <label class="f">Court${courtInput('wf_court', id ? w.court : 'Illinois Appellate Court')}</label>
+      <label class="f">District<select id="wf_district">${DISTRICTS.map(d => `<option ${w.district===d?'selected':''}>${d}</option>`).join('')}</select></label>
+      ${inp('court_no','Case No.','','4-26-0454')}${inp('lower_court','Circuit court / county (optional)')}
+      <div class="full hint" style="margin-top:-6px">Use the format 4-26-0454 (appellate) or 132438 (Supreme Court) so “Check for decision” can find it.</div>
+      <label class="f full">Why we're watching<textarea id="wf_notes" style="min-height:90px">${esc(w.notes||'')}</textarea></label>
+      ${id ? '' : `<label class="f full">Briefs (PDF, optional — you can add more later)<input type="file" id="wf_files" accept="application/pdf,.pdf" multiple></label>`}
+    </div>
+    <div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="saveWatch(${id?`'${id}'`:'null'},this)">${id ? 'Save' : 'Add to Cases to Watch'}</button></div>`);
+}
+function saveWatch(id, btn){
+  const p = {}; WATCH_FIELDS.forEach(k => p[k] = val('wf_' + k));
+  if (!p.case_name.trim()) return toast('Case name is required', true);
+  const files = id ? [] : [...(($('#wf_files') || {}).files || [])];
+  run(async () => {
+    const w = id ? (await api('updateWatch', { id, ...p })).watch : (await api('createWatch', p)).watch;
+    closeModal();
+    if (files.length) await uploadMany({ watch_id: w.id, doc_kind: 'brief' }, files);
+    S.open['w' + w.id] = true; await reloadReview(); toast(id ? 'Saved' : 'Added to Cases to Watch');
+  }, btn);
+}
+function watchDocModal(id){
+  const w = watchOf(id);
+  openModal(`<h3>Add document</h3><div class="hint" style="margin-bottom:12px"><b>${esc(w.case_name)}</b></div>
+    <div class="fgrid">
+      <label class="f full">Type of document<select id="wd_kind" onchange="$('#wd_other').style.display=this.value==='other'?'':'none'">
+        <option value="brief">Brief</option><option value="opinion">Opinion / Rule 23 order</option><option value="other">Other</option></select></label>
+      <label class="f full" id="wd_other" style="display:none">What is this document?<input type="text" id="wd_label" maxlength="200" placeholder="e.g. Docket printout, Record excerpt"></label>
+      <label class="f full">PDF file(s) (25 MB max each)<input type="file" id="wd_files" accept="application/pdf,.pdf" multiple></label>
+    </div>
+    <div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="doWatchDoc('${id}',this)">Upload</button></div>`);
+}
+function doWatchDoc(id, btn){
+  const kind = val('wd_kind'), label = val('wd_label').trim(), files = [...(($('#wd_files') || {}).files || [])];
+  if (kind === 'other' && !label) return toast('Please describe what this document is', true);
+  if (!files.length) return toast('Choose a PDF file', true);
+  run(async () => { closeModal(); await uploadMany({ watch_id: id, doc_kind: kind, doc_label: kind === 'other' ? label : undefined }, files); await reloadReview(); }, btn);
+}
+function addWatchUpdate(id, btn){
+  const el = $('#wu_' + id), note = el.value.trim(); if (!note) return;
+  run(async () => { await api('addWatchUpdate', { watch_id: id, note }); el.value = ''; await reloadReview(); toast('Note added'); }, btn);
+}
+function addWatchComment(id, btn){
+  const el = $('#wc_' + id), body = el.value.trim(); if (!body) return;
+  run(async () => { await api('addWatchComment', { watch_id: id, body }); el.value = ''; await reloadReview(); }, btn);
+}
+function checkDecision(id, btn){
+  const old = btn.textContent; btn.textContent = 'Checking the court’s opinions…';
+  run(async () => {
+    const r = await api('checkWatchDecision', { id });
+    await reloadReview();
+    if (r.status === 'found') {
+      openModal(`<h3>Decision found ✓</h3><div class="infobox" style="background:var(--yes-bg);border-color:#bfe3cd">${esc(r.message)}</div>
+        <p>A note was added to the status history. Would you like an AI summary of the decision to review?</p>
+        <div class="mfoot"><button class="btn" onclick="closeModal()">Not now</button><button class="btn gold" onclick="watchSummaryModal('${id}')">✎ AI summary</button></div>`);
+    } else toast(r.message, r.status === 'no_number');
+  }, btn).finally(() => { if (document.body.contains(btn)) btn.textContent = old; });
+}
+function openResearch(id){
+  const w = watchOf(id), no = (w && w.court_no) || '';
+  window.open(RESEARCH_IL, '_blank', 'noopener');
+  if (no && navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(no).then(() => toast(`Case number ${no} copied — paste it into re:SearchIL's search`), () => {});
+  else if (no) toast(`Search re:SearchIL for case number ${no}`);
+}
+function watchSummaryModal(id){
+  const w = watchOf(id);
+  openModal(`<h3>Decision summary</h3><div class="hint" style="margin-bottom:10px"><b>${esc(w.case_name)}</b>${w.decision_cite ? ' · ' + esc(w.decision_cite) : ''}</div>
+    <button class="btn gold" onclick="draftWatchSummary('${id}',this)">${w.decision_summary ? '↻ Redraft with AI' : '✎ Draft with AI'}</button>
+    <label class="f" style="margin-top:12px">Summary (edit freely — check it against the decision before saving)<textarea id="ws_text" style="min-height:220px">${esc(w.decision_summary||'')}</textarea></label>
+    <div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn pri" onclick="saveWatchSummary('${id}',this)">Save</button></div>`);
+}
+function draftWatchSummary(id, btn){
+  if (val('ws_text').trim() && !confirm('Replace the current text with a new AI draft?')) return;
+  btn.textContent = 'Reading the decision… (up to a minute)';
+  run(async () => { const r = await api('summarizeWatchDecision', { id }); $('#ws_text').value = r.draft; toast('Draft ready — please review and edit'); }, btn)
+    .finally(() => { if (document.body.contains(btn)) btn.textContent = '↻ Redraft with AI'; });
+}
+function saveWatchSummary(id, btn){ run(async () => { await api('saveWatchSummary', { id, decision_summary: val('ws_text') }); closeModal(); await reloadReview(); toast('Summary saved'); }, btn); }
+function moveWatchModal(id){
+  const w = watchOf(id), R = S.review;
+  const nd = (R.watchDocs || []).filter(d => d.watch_id === id).length, nc = (R.watchComments || []).filter(c => c.watch_id === id).length;
+  openModal(`<h3>Move to Amicus Review</h3><div class="infobox"><b>${esc(w.case_name)}</b><br>It becomes a regular Case Review case, open for comments and votes. ${nd} document(s) and ${nc} comment(s) move with it; the notes, decision and status history become its opening summary.</div>
+    <div class="fgrid" style="margin-top:12px">
+      <label class="f full">Type<select id="mw_type" onchange="$('#mw_pla').style.display=this.value==='pla'?'contents':'none';$('#mw_court').value=this.value==='pla'?'Illinois Supreme Court':${esc(JSON.stringify(w.court||''))}">
+        <option value="pla">PLA Granted (Illinois Supreme Court)</option><option value="request">Outside Request</option></select></label>
+      <label class="f">Court${courtInput('mw_court', 'Illinois Supreme Court')}</label>
+      <div id="mw_pla" style="display:contents">
+        <label class="f">Supreme Court case No.<input type="text" id="mw_no" placeholder="e.g. 132999"></label>
+        <label class="f">Date PLA granted<input type="date" id="mw_date"></label></div>
+    </div>
+    <div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn gold" onclick="doMoveWatch('${id}',this)">Move to Amicus Review</button></div>`);
+}
+function doMoveWatch(id, btn){
+  const type = val('mw_type');
+  run(async () => {
+    const r = await api('moveWatchToReview', { id, case_type: type, court: val('mw_court'), court_no: type === 'pla' ? val('mw_no') : '', pla_granted: type === 'pla' ? val('mw_date') : '' });
+    closeModal(); S.open[r.case.id] = true; await reloadReview(); toast('Moved to Amicus Review — members can now vote');
+  }, btn);
+}
+function deleteWatchModal(id){
+  const w = watchOf(id), R = S.review;
+  const nd = (R.watchDocs || []).filter(d => d.watch_id === id).length, nc = (R.watchComments || []).filter(c => c.watch_id === id).length;
+  openModal(`<h3>Delete Case to Watch</h3>
+    <div class="warnbox"><b>This cannot be undone.</b> ${nd} document(s), ${nc} comment(s) and the status notes will be permanently deleted.</div>
+    <p>The Archive keeps a record: <b>${esc(w.case_name)}</b> — <b>Watched — no IDC involvement</b>.</p>
+    <label class="f">Type DELETE to confirm<input type="text" id="wdel_ok" autocomplete="off"></label>
+    <div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn danger" onclick="doDeleteWatch('${id}',this)">Delete permanently</button></div>`);
+}
+function doDeleteWatch(id, btn){
+  if (val('wdel_ok').trim().toUpperCase() !== 'DELETE') return toast('Type DELETE to confirm', true);
+  run(async () => { await api('deleteWatch', { id, confirm: 'DELETE' }); closeModal(); await reloadReview(); toast('Deleted; archive entry saved'); }, btn);
+}
 
 const CASE_FIELDS = ['case_name','court','court_no','app_cite','district','pla_granted','appellant','vote_deadline','issues','summary','requester_name','requester_firm','requester_contact','date_received','facts_notes'];
 function caseModal(id, typeOverride, carry){

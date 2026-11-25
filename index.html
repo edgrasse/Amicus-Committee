@@ -160,6 +160,12 @@ label.f>input,label.f>select,label.f>textarea{margin-top:4px}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;margin-bottom:14px}
 .seg button{border:none;background:#fff;padding:7px 14px}
 .seg button.on{background:var(--navy);color:#fff}
+.choice{display:grid;gap:10px;margin:6px 0 4px}
+.choice .btn{display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;padding:12px 14px;white-space:normal}
+.choice .btn b{font-size:15px;color:var(--navy)}
+.choice .btn span{font-size:13px;color:var(--muted);font-weight:400}
+td.anote{max-width:260px;font-size:13px;white-space:pre-wrap}
+.becomments{margin-top:14px;border-top:1px solid var(--line);padding-top:10px}
 .warnbox{background:var(--no-bg);border:1px solid #f4c3bd;color:#7a1b12;border-radius:8px;padding:10px 12px;font-size:14px}
 .infobox{background:#eef3fb;border:1px solid #cfdbef;border-radius:8px;padding:10px 12px;font-size:14px}
 .toast{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 16px;border-radius:8px;font-size:14px;z-index:60;box-shadow:0 8px 24px rgba(0,0,0,.25);max-width:90vw}
@@ -227,11 +233,17 @@ label.f>input,label.f>select,label.f>textarea{margin-top:4px}
    grey example text that looked like a real case number).
    v1.8.2: "Check for decision" shows its result in a box with the date, and
    every check is recorded in the status history (Worker Session 8).
+   v1.9.0: "+ New Case" asks PLA Granted or Request for IDC Involvement; the
+   AI reads the uploaded opinion / request documents and drafts the form for
+   review (facts only, no opinions); PDFs attach on Post, discarded on Cancel.
+   Comments on Status Board cases (anyone; edit own; Chair deletes). Cases to
+   Watch now below the open cases. Optional note on every deletion, shown in
+   the Archive (Worker Session 9; run Amicus_v1.9.0_Migration.sql first).
    No keys in this file. Every permission is enforced by the Worker;
    hiding buttons here is only for convenience.
    ============================================================ */
-const APP_VERSION = '1.8.2';
-const BUILD_DATE  = 'Nov 11, 2026';
+const APP_VERSION = '1.9.0';
+const BUILD_DATE  = 'Nov 25, 2026';
 // Court choices (the field also accepts typed text for anything else)
 const COURTS = ['Illinois Supreme Court', 'Illinois Appellate Court', 'U.S. Supreme Court',
   'U.S. Court of Appeals for the Seventh Circuit'];
@@ -483,10 +495,10 @@ const lockedCase = c => c.vote_deadline && today() > c.vote_deadline;
 function renderReview(){
   const R = S.review, ix = reviewIndex();
   return `<div class="bar"><h2>Case Review</h2><span class="hint">Click a case to expand it.</span>
-    <div class="sp"></div>${isChair() ? `<button class="btn pri" onclick="caseModal()">+ New Case</button>` : ''}</div>
-    ${renderWatch(ix)}
+    <div class="sp"></div>${isChair() ? `<button class="btn pri" onclick="newCaseChooser()">+ New Case</button>` : ''}</div>
     <div class="section-title">Open for comment and vote <span class="count">${R.cases.length}</span></div>
     ${R.cases.length ? R.cases.map(c => caseCard(c, ix)).join('') : '<div class="empty">No cases are open for review right now.</div>'}
+    ${renderWatch(ix)}
     ${renderArchive()}`;
 }
 
@@ -574,10 +586,11 @@ function commentRow(c, m, ix){
 function renderArchive(){
   const A = S.review.archive;
   return `<div class="section-title">Archive — every case presented <span class="count">${A.length}</span></div>
-  ${A.length ? `<div class="tbl-wrap"><table><thead><tr><th>Case</th><th>Case No.</th><th>Type</th><th>Presented</th><th>Final vote</th><th>Outcome</th></tr></thead><tbody>
+  ${A.length ? `<div class="tbl-wrap"><table><thead><tr><th>Case</th><th>Case No.</th><th>Type</th><th>Presented</th><th>Final vote</th><th>Outcome</th><th>Note</th></tr></thead><tbody>
   ${A.map(a => `<tr><td>${esc(a.case_name)}</td><td>${esc(a.court_no)}</td><td>${a.case_type==='pla'?'PLA':a.case_type==='watch'?'Watched':'Request'}</td><td>${fmtDate(a.presented_at)}</td>
     <td style="white-space:nowrap">${a.case_type==='watch' ? '<span class="muted">—</span>' : `${a.yes_count} Yes / ${a.no_count} No${a.abstain_count||a.recuse_count?` <span class="muted">(${a.abstain_count} abst., ${a.recuse_count} rec.)</span>`:''}`}</td>
-    <td><span class="res ${a.outcome.startsWith('Approved')?'fav':'tbd'}">${esc(a.outcome)}</span></td></tr>`).join('')}
+    <td><span class="res ${a.outcome.startsWith('Approved')?'fav':'tbd'}">${esc(a.outcome)}</span></td>
+    <td class="anote">${a.note ? esc(a.note) : '<span class="muted">—</span>'}</td></tr>`).join('')}
   </tbody></table></div>` : '<div class="empty">No cases have been decided yet.</div>'}`;
 }
 
@@ -769,16 +782,88 @@ function deleteWatchModal(id){
   openModal(`<h3>Delete Case to Watch</h3>
     <div class="warnbox"><b>This cannot be undone.</b> ${nd} document(s), ${nc} comment(s) and the status notes will be permanently deleted.</div>
     <p>The Archive keeps a record: <b>${esc(w.case_name)}</b> — <b>Watched — no IDC involvement</b>.</p>
+    ${archiveNoteField('wdel_note')}
     <label class="f">Type DELETE to confirm<input type="text" id="wdel_ok" autocomplete="off"></label>
     <div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn danger" onclick="doDeleteWatch('${id}',this)">Delete permanently</button></div>`);
 }
 function doDeleteWatch(id, btn){
   if (val('wdel_ok').trim().toUpperCase() !== 'DELETE') return toast('Type DELETE to confirm', true);
-  run(async () => { await api('deleteWatch', { id, confirm: 'DELETE' }); closeModal(); await reloadReview(); toast('Deleted; archive entry saved'); }, btn);
+  const note = val('wdel_note').trim();
+  run(async () => { await api('deleteWatch', { id, confirm: 'DELETE', note }); closeModal(); await reloadReview(); toast('Deleted; archive entry saved'); }, btn);
+}
+// v1.9.0: optional note on every deletion, saved on the Archive record
+function archiveNoteField(fid){
+  return `<label class="f" style="margin-bottom:10px">Note (optional — kept in the Archive)<textarea id="${fid}" maxlength="4000" style="min-height:60px" placeholder="e.g., why the case is being deleted"></textarea></label>`;
 }
 
+/* ---- v1.9.0: New Case — choose the type, upload the PDF(s), AI drafts the form for review ---- */
+// S.staged = [{storage_path, file_name, file_size}] — PDFs uploaded to the temporary staging folder;
+// attached to the case on "Post", deleted on Cancel (the weekly run also clears anything left over).
+function newCaseChooser(){
+  if (S.staged) { discardStaged(S.staged); S.staged = null; }      // leftovers from a form closed by clicking outside it
+  openModal(`<h3>New Case</h3><p>What kind of case is this?</p>
+    <div class="choice">
+      <button class="btn" onclick="intakeModal('pla')"><b>PLA Granted</b><span>Upload the appellate opinion — the form is filled in for you to review.</span></button>
+      <button class="btn" onclick="intakeModal('request')"><b>Request for IDC Involvement</b><span>Upload the request’s documents — the form is filled in for you to review.</span></button>
+    </div>
+    <div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button></div>`);
+}
+function intakeModal(kind){
+  const pla = kind === 'pla';
+  openModal(`<h3>${pla ? 'New Case — PLA Granted' : 'New Case — Request for IDC Involvement'}</h3>
+    <div class="fgrid">
+      ${pla ? `<label class="f">Date PLA granted<input type="date" id="in_granted" value="${today()}"></label>
+        <label class="f">Supreme Court No.<input type="text" id="in_scno" placeholder="from the PLA grant, e.g. 131234"></label>
+        <label class="f full">Appellate opinion (PDF, 25 MB max)<input type="file" id="in_files" accept="application/pdf,.pdf"></label>`
+      : `<label class="f full">Request documents — letter, briefs, decision (PDFs, up to 5, 25 MB max each)<input type="file" id="in_files" accept="application/pdf,.pdf" multiple></label>`}
+    </div>
+    <div class="hint" style="margin-top:8px">The AI reads the ${pla ? 'opinion' : 'documents'} and drafts the case for you to check and edit before anything is posted. It reports facts only — no opinions. Takes about 30–60 seconds.</div>
+    <div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn" onclick="intakeRead('${kind}',this,true)">Skip — fill in by hand</button>
+      <button class="btn pri" onclick="intakeRead('${kind}',this,false)">${pla ? 'Read opinion' : 'Read documents'}</button></div>`);
+}
+async function stagePdf(file){
+  if (!/\.pdf$/i.test(file.name) || (file.type && file.type !== 'application/pdf')) throw new Error(`${file.name} is not a PDF.`);
+  if (file.size > MAX_PDF_BYTES) throw new Error(`${file.name} is larger than 25 MB.`);
+  const link = await api('getUploadLink', { staging: true, file_name: file.name, content_type: 'application/pdf', file_size: file.size });
+  const put = await fetch(link.uploadUrl, { method:'PUT', headers:{ 'Content-Type':'application/pdf' }, body: file });
+  if (!put.ok) throw new Error(`Upload of ${file.name} failed (${put.status}).`);
+  return { storage_path: link.storage_path, file_name: file.name, file_size: file.size };
+}
+function intakeRead(kind, btn, skip){
+  const pla = kind === 'pla';
+  const files = [...(($('#in_files') || {}).files || [])];
+  const carry = pla ? { pla_granted: val('in_granted'), court_no: val('in_scno').trim(), court: 'Illinois Supreme Court' } : {};
+  if (!skip && !files.length) return toast(pla ? 'Choose the appellate opinion PDF first' : 'Choose at least one PDF first', true);
+  if (files.length > 5) return toast('Up to 5 PDFs at a time — add more after posting', true);
+  run(async () => {
+    const staged = [];
+    try {
+      for (let i = 0; i < files.length; i++) { toast(`Uploading ${i+1} of ${files.length}: ${files[i].name}…`); staged.push(await stagePdf(files[i])); }
+    } catch(e) { await discardStaged(staged); throw e; }
+    S.staged = staged;
+    let ai = null, aiErr = '';
+    if (!skip && staged.length) {
+      btn.textContent = 'Reading…';
+      try { ai = (await api('analyzeNewCase', { kind, staging_paths: staged.map(s => s.storage_path) })).fields; }
+      catch(e) { aiErr = e.message; }
+    }
+    if (ai) {
+      for (const [k, v] of Object.entries(ai)) if (v && k !== 'appellant_note') carry[k] = v;
+      if (pla) carry.court = 'Illinois Supreme Court';
+      if (pla && !carry.court_no) delete carry.court_no;
+    }
+    caseModal(null, kind, carry, { ai: !!ai, aiErr, appellantNote: ai && ai.appellant_note });
+  }, btn);
+}
+async function discardStaged(list){
+  const paths = (list || []).map(s => s.storage_path);
+  if (paths.length) { try { await api('discardStaging', { staging_paths: paths }); } catch(e) { /* the weekly clean-up removes leftovers */ } }
+}
+function cancelCaseModal(){ const s = S.staged; S.staged = null; closeModal(); discardStaged(s); }
+
 const CASE_FIELDS = ['case_name','court','court_no','app_cite','district','pla_granted','appellant','vote_deadline','issues','summary','requester_name','requester_firm','requester_contact','date_received','facts_notes'];
-function caseModal(id, typeOverride, carry){
+function caseModal(id, typeOverride, carry, info){
   const c = id ? S.review.cases.find(x => x.id === id) : null;
   const v = carry || c || {};
   const type = typeOverride || (c ? c.case_type : 'pla');
@@ -786,8 +871,13 @@ function caseModal(id, typeOverride, carry){
   const inp = (k, label, cls, t) => `<label class="f ${cls||''}">${label}<input type="${t||'text'}" id="cf_${k}" value="${esc(v[k]||'')}"></label>`;
   const area = (k, label, h) => `<label class="f full">${label}<textarea id="cf_${k}" style="min-height:${h||70}px">${esc(v[k]||'')}</textarea></label>`;
   const sel = (k, label, opts) => `<label class="f">${label}<select id="cf_${k}">${opts.map(o => `<option ${v[k]===o?'selected':''}>${o}</option>`).join('')}</select></label>`;
-  openModal(`<h3>${c ? 'Edit Case' : 'New Case'}</h3>
-    <div class="seg"><button class="${pla?'on':''}" onclick="caseModal(${id?`'${id}'`:'null'},'pla',collectCase())">PLA Granted</button><button class="${!pla?'on':''}" onclick="caseModal(${id?`'${id}'`:'null'},'request',collectCase())">Outside Request</button></div>
+  const inf = info || {}, staged = c ? [] : (S.staged || []);
+  const banner = c ? '' : inf.ai
+    ? `<div class="infobox" style="margin-bottom:12px"><b>AI draft — please review.</b> Everything below was read from the PDF${staged.length===1?'':'s'}; check it against the document${staged.length===1?'':'s'} and edit as needed before posting. “[to be added]” marks anything the document${staged.length===1?' does':'s do'} not say.${pla ? `<br><b>Appellant:</b> the AI picked the side that lost in the appellate court — please confirm.${inf.appellantNote ? ' <span class="muted">(' + esc(inf.appellantNote) + ')</span>' : ''}` : ''}</div>`
+    : inf.aiErr ? `<div class="warnbox" style="margin-bottom:12px">${esc(inf.aiErr)}</div>` : '';
+  const stagedHtml = staged.length ? `<div class="f full"><span>Attached when you post</span><ul class="docs" style="margin-top:4px">${staged.map(s => `<li><span class="pdf">PDF</span>${esc(s.file_name)}</li>`).join('')}</ul></div>` : '';
+  openModal(`<h3>${c ? 'Edit Case' : pla ? 'New Case — PLA Granted' : 'New Case — Request for IDC Involvement'}</h3>
+    ${c ? `<div class="seg"><button class="${pla?'on':''}" onclick="caseModal('${id}','pla',collectCase())">PLA Granted</button><button class="${!pla?'on':''}" onclick="caseModal('${id}','request',collectCase())">Outside Request</button></div>` : banner}
     <div class="fgrid">
       ${inp('case_name','Case name','full')}
       <label class="f">Court${courtInput('cf_court', v.court !== undefined ? v.court : (pla && !c ? 'Illinois Supreme Court' : ''))}</label>
@@ -799,9 +889,9 @@ function caseModal(id, typeOverride, carry){
         ${inp('requester_name','Requester name')}${inp('requester_firm','Requester firm')}
         ${inp('requester_contact','Requester contact (email / phone)')}${inp('vote_deadline','Voting deadline (optional)','','date')}
         ${area('facts_notes','Facts / Notes',140)}`}
-      ${c ? '' : `<label class="f full">Documents (PDF, 25 MB max each)<input type="file" id="cf_files" accept="application/pdf,.pdf" multiple></label>`}
+      ${c ? '' : `${stagedHtml}<label class="f full">${staged.length ? 'Other documents (optional)' : 'Documents'} (PDF, 25 MB max each)<input type="file" id="cf_files" accept="application/pdf,.pdf" multiple></label>`}
     </div>
-    <div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button>
+    <div class="mfoot"><button class="btn" onclick="${c ? 'closeModal()' : 'cancelCaseModal()'}">Cancel</button>
       <button class="btn pri" onclick="saveCase(${id?`'${id}'`:'null'},'${type}',this)">${c ? 'Save changes' : 'Post to Committee'}</button></div>`);
 }
 function collectCase(){ const o = {}; CASE_FIELDS.forEach(k => { const el = document.getElementById('cf_' + k); if (el) o[k] = el.value; }); return o; }
@@ -813,7 +903,7 @@ function saveCase(id, type, btn){
     const payload = { case_type: type, ...fields };
     let c;
     if (id) c = (await api('updateCase', { id, ...payload })).case;
-    else c = (await api('createCase', payload)).case;
+    else { c = (await api('createCase', { ...payload, staged_docs: S.staged || [] })).case; S.staged = null; }
     closeModal();
     if (files.length) await uploadMany({ case_id: c.id }, files);
     S.open[c.id] = true; await reloadReview(); toast(id ? 'Case updated' : 'Case posted to the committee');
@@ -846,12 +936,14 @@ function declineModal(id){
     <div class="warnbox"><b>This cannot be undone.</b> The following will be permanently deleted:
       <ul style="margin:6px 0 0 18px;padding:0"><li>${docs.length} document(s)${docs.length?': '+docs.map(d=>esc(d.file_name)).join(', '):''}</li><li>${n} comment(s)</li><li>${t.total} vote(s)</li><li>The case summary / facts</li></ul></div>
     <p>An Archive entry is kept: <b>${esc(c.case_name)}</b> — ${t.yes} Yes / ${t.no} No — Outcome: <b>No IDC involvement</b>.</p>
+    ${archiveNoteField('del_note')}
     <label class="f">Type DELETE to confirm<input type="text" id="del_ok" autocomplete="off"></label>
     <div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn danger" onclick="doDecline('${id}',this)">Delete permanently</button></div>`);
 }
 function doDecline(id, btn){
   if (val('del_ok').trim().toUpperCase() !== 'DELETE') return toast('Type DELETE to confirm', true);
-  run(async () => { await api('declineCase', { id, confirm: 'DELETE' }); closeModal(); await reloadReview(); toast('Case and documents deleted; archive entry saved'); }, btn);
+  const note = val('del_note').trim();
+  run(async () => { await api('declineCase', { id, confirm: 'DELETE', note }); closeModal(); await reloadReview(); toast('Case and documents deleted; archive entry saved'); }, btn);
 }
 </script>
 <script>
@@ -991,7 +1083,7 @@ function boardEntryCard(b, ix){
       <svg class="chev" viewBox="0 0 20 20" fill="currentColor"><path d="M7 4l6 6-6 6"/></svg>
       <div style="flex:1;min-width:220px"><div class="ctitle">${esc(b.case_name)}</div>
         <div class="bmeta">${b.court ? `<span>${esc(b.court)}</span>` : ''}${b.court_no ? `<span>No. ${esc(b.court_no)}</span>` : ''}${filedText(b) ? `<span>Filed <b>${filedText(b)}</b></span>` : ''}${decidedLine}</div>
-        ${b.authors_text ? `<div class="bmeta"><span>Author(s): ${esc(b.authors_text)}</span></div>` : ''}</div>
+        ${b.authors_text || entryCommentsOf(b.id).length ? `<div class="bmeta">${b.authors_text ? `<span>Author(s): ${esc(b.authors_text)}</span>` : ''}${entryCommentsOf(b.id).length ? `<span>💬 ${entryCommentsOf(b.id).length}</span>` : ''}</div>` : ''}</div>
       <div class="cright" style="${b.decided ? '' : 'display:block'}">${right}</div>
     </div>
     ${open ? boardEntryBody(b, ix, ups) : ''}
@@ -1017,8 +1109,36 @@ function boardEntryBody(b, ix, ups){
     canAddDocs(ix, b) ? `<button class="btn sm" onclick="addDocModal('${b.id}')">+ Add document</button>` : '',
     canSynopsis() ? `<button class="btn sm gold" onclick="synopsisModal('${b.id}')">Synopsis to IDC Members</button>` : ''
   ].join('');
-  return `<div class="cbody"><div>${left}</div><div>${rightCol}</div>${btns ? `<div class="chairbar"><span class="lbl">Actions:</span>${btns}</div>` : ''}</div>`;
+  return `<div class="cbody"><div>${left}</div><div>${rightCol}</div>${btns ? `<div class="chairbar"><span class="lbl">Actions:</span>${btns}</div>` : ''}
+    ${entryCommentsHtml(b)}</div>`;
 }
+
+/* ---- v1.9.0: comments on Status Board cases — anyone signed in; edit own; Chair deletes ---- */
+function entryCommentsOf(boardId){ return ((S.board && S.board.entryComments) || []).filter(c => c.board_id === boardId); }
+function entryCommentsHtml(b){
+  const list = entryCommentsOf(b.id), names = (S.board && S.board.commentNames) || {};
+  const row = m => {
+    const who = esc(names[m.member_id] || 'Former member');
+    if (S.editing === m.id) return `<div class="comment"><div class="ch"><b>${who}</b></div>
+      <textarea id="bed_${m.id}">${esc(m.body)}</textarea>
+      <div style="display:flex;gap:6px;margin-top:6px"><button class="btn sm pri" onclick="saveEntryComment('${m.id}',this)">Save</button><button class="btn sm" onclick="S.editing=null;render(true)">Cancel</button></div></div>`;
+    return `<div class="comment"><div class="ch"><b>${who}</b><span class="when">${fmtStamp(m.created_at)}${m.edited_at ? ' · (edited)' : ''}</span>
+      <span class="acts">${m.member_id === S.me.id ? `<button class="link" onclick="S.editing='${m.id}';render(true)">Edit</button>` : ''}
+      ${isChair() ? `<button class="link" style="color:var(--no)" onclick="deleteEntryComment('${m.id}',this)">Delete</button>` : ''}</span></div>
+      <div class="txt">${esc(m.body)}</div></div>`;
+  };
+  return `<div class="sec becomments" style="grid-column:1/-1"><h4>Comments (${list.length}) <span class="hint" style="font-weight:400">· anyone can comment · names shown as first name + last initial</span></h4>
+    ${list.map(row).join('') || '<div class="hint">No comments yet.</div>'}
+    <div class="addc"><textarea id="bec_${b.id}" placeholder="Add a comment about this case…"></textarea>
+      <button class="btn pri" onclick="addEntryComment('${b.id}',this)">Post</button></div></div>`;
+}
+const reloadBoard = async () => { S.board = await api('getBoard'); render(true); };
+function addEntryComment(boardId, btn){
+  const el = $('#bec_' + boardId), body = el.value.trim(); if (!body) return;
+  run(async () => { await api('addBoardEntryComment', { board_id: boardId, body }); el.value = ''; await reloadBoard(); }, btn);
+}
+function saveEntryComment(id, btn){ run(async () => { await api('editBoardEntryComment', { id, body: val('bed_' + id) }); S.editing = null; await reloadBoard(); }, btn); }
+function deleteEntryComment(id, btn){ if (!confirm('Delete this comment?')) return; run(async () => { await api('deleteBoardEntryComment', { id }); await reloadBoard(); toast('Comment deleted'); }, btn); }
 
 function addStatus(boardId, btn){
   const el = $('#su_' + boardId), note = el.value.trim(); if (!note) return;
@@ -1364,14 +1484,16 @@ function boardDeclineModal(caseId){
   openModal(`<h3>Record: Board Declined</h3>
     <div class="warnbox"><b>This cannot be undone.</b> The case, its report, Board votes and comments, your Tracker entry and ${docs.length} document(s) will be permanently deleted.</div>
     <p>The Archive keeps a record of <b>${esc(c.case_name)}</b> with outcome <b>Board declined</b>.</p>
+    ${archiveNoteField('bdel_note')}
     <label class="f">Type DELETE to confirm<input type="text" id="bdel_ok" autocomplete="off"></label>
     <div class="mfoot"><button class="btn" onclick="closeModal()">Cancel</button><button class="btn danger" onclick="doBoardDecision('${caseId}','declined',this)">Delete permanently</button></div>`);
 }
 function doBoardDecision(caseId, decision, btn){
   const confirmText = decision === 'declined' ? val('bdel_ok').trim().toUpperCase() : '';
   if (decision === 'declined' && confirmText !== 'DELETE') return toast('Type DELETE to confirm', true);
+  const note = decision === 'declined' ? val('bdel_note').trim() : '';
   run(async () => {
-    await api('boardDecision', { case_id: caseId, decision, confirm: confirmText });
+    await api('boardDecision', { case_id: caseId, decision, confirm: confirmText, note });
     closeModal(); await reloadBoardReview();
     toast(decision === 'approved' ? 'Board approval recorded — case added to the Status Board' : 'Recorded as Board declined; case and documents deleted');
   }, btn);
